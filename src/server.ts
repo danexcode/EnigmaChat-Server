@@ -1,12 +1,11 @@
 import 'module-alias/register';
-import express from 'express';
-import cors from 'cors';
+import { PrismaClient } from '@prisma/client'
 
-const app = express();
+import { createApp } from '@/app';
 
-app.use(cors());
-app.use(express.json());
+export const prisma = new PrismaClient();
 
+const app = createApp();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
