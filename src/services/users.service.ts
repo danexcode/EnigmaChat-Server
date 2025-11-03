@@ -1,7 +1,9 @@
 export class UsersService {
   constructor() {}
 
-  async create() {}
+  async create(data: any) {
+
+  }
 
   async findById() {}
 

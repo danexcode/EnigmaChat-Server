@@ -1,11 +1,9 @@
-export class MessagesService {
+export class ChatsService {
   constructor() {}
 
   async create() {}
 
   async findById() {}
-
-  async findByGroupId() {}
 
   async update() {}
 

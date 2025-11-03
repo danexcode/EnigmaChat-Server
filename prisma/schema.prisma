@@ -1,10 +1,9 @@
 // schema.prisma
 
 // 1. Configuración de la Base de Datos
-// Usamos PostgreSQL como referencia.
 datasource db {
+  // Usamos PostgreSQL como referencia, pero la mayoría de los tipos se aplican a MySQL.
   provider = "postgresql"
-  // ¡IMPORTANTE! Reemplaza esto con tu URL de conexión real
   url      = env("DATABASE_URL")
 }
 
@@ -14,104 +13,147 @@ generator client {
   output   = "../node_modules/.prisma/client"
 }
 
-// 3. Modelos de la Base de Datos
+// 3. Tipos de Datos Compartidos (ENUMs)
 
-// Modelo de Usuarios (users) - Mantiene ID Int para eficiencia interna
-model User {
-  id                   Int      @id @default(autoincrement()) @map("user_id")
-  username             String   @unique @db.VarChar(50)
-  email                String   @unique @db.VarChar(100)
+// Tipo de Chat
+enum ChatType {
+  INDIVIDUAL
+  GROUP
 
-  // Seguridad y Autenticación
-  passwordHash         String   @map("password_hash") @db.VarChar(255)
-  twoFactorSecret      String?  @map("two_factor_secret") @db.VarChar(255)
-  is2faEnabled         Boolean  @default(false) @map("is_2fa_enabled")
-
-  // Recuperación
-  resetPasswordToken   String?  @map("reset_password_token")
-  resetPasswordExpires DateTime? @map("reset_password_expires")
-
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @default(now()) @map("updated_at")
-
-  // Relaciones
-  groupsCreated   Group[]  @relation("GroupCreator")
-  groupMemberships GroupMember[]
-  messagesSent    Message[]
-
-  @@map("users")
+  @@map("chat_type")
 }
 
-// Modelo de Grupos (groups) - IMPLEMENTACIÓN DEL ID ALFANUMÉRICO DE 8 CARACTERES
-model Group {
-  // ID ALFANUMÉRICO DE 8 CARACTERES
-  id                String   @id @unique @db.Char(8) @map("group_id") // ID generado por la aplicación
-  groupName         String   @map("group_name") @db.VarChar(100)
-
-  // Relación con el creador
-  creatorId         Int      @map("creator_id")
-  creator           User     @relation("GroupCreator", fields: [creatorId], references: [id])
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @map("updated_at")
-
-  // Llave Maestra de Enigma
-  enigmaMasterKey   String   @map("enigma_master_key") @db.Text
-
-  // Relaciones
-  members           GroupMember[]
-  messages          Message[]
-
-  @@map("groups")
-}
-
-// Modelo de Pertenencia a Grupos (group_members)
-// Las claves foráneas deben reflejar el nuevo tipo de ID (String) para groupId
-model GroupMember {
-  // Claves Primarias y Foráneas
-  groupId String @map("group_id") // Ahora es String
-  userId  Int    @map("user_id")
-
-  // Definición de la Clave Primaria Compuesta
-  @@id([groupId, userId])
-
-  // Relación con el Grupo (referencia al String id)
-  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  // Relación con el Usuario
-  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Rol del Miembro
-  role    GroupRole @default(MEMBER)
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @default(now()) @map("updated_at")
-
-  @@map("group_members")
-}
-
-// Modelo de Mensajes (messages) - Mantiene ID Int
-model Message {
-  id         Int      @id @default(autoincrement()) @map("message_id")
-
-  // Claves Foráneas: groupId es ahora String
-  groupId    String   @map("group_id")
-  group      Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  senderId   Int?     @map("sender_id")
-  sender     User?    @relation(fields: [senderId], references: [id], onDelete: SetNull)
-
-  // Contenido Cifrado
-  ciphertext String   @map("ciphertext") @db.Text
-
-  sentAt     DateTime @default(now()) @map("sent_at")
-  updatedAt         DateTime @default(now()) @map("updated_at")
-
-  @@map("messages")
-}
-
-// 4. Tipo ENUM para Roles
+// Roles de Miembros de Grupo
 enum GroupRole {
   ADMIN
   MEMBER
 
   @@map("group_role")
+}
+
+// 4. Modelos de la Base de Datos
+
+// Modelo de Usuarios (users)
+model User {
+  // ID Alfanumérico de 8 caracteres
+  id               String      @id @unique @db.Char(8) @map("user_id")
+  username         String      @unique @db.VarChar(50)
+  email            String      @unique @db.VarChar(100)
+
+  // Seguridad y Autenticación
+  passwordHash     String      @map("password_hash") @db.VarChar(255)
+  twoFactorSecret  String?     @map("two_factor_secret") @db.VarChar(255)
+  is2faEnabled     Boolean     @default(false) @map("is_2fa_enabled")
+
+  // Recuperación
+  resetPasswordToken   String?  @map("reset_password_token")
+  resetPasswordExpires DateTime? @map("reset_password_expires")
+
+  // Relaciones con Chats y Mensajes
+  individualChatA  IndividualChat[] @relation("UserA")
+  individualChatB  IndividualChat[] @relation("UserB")
+  groupChatsCreated GroupChat[]
+  groupMemberships GroupMember[]
+  messagesSent     Message[]
+
+  @@map("users")
+}
+
+// 4.1. Tabla base para todos los chats (chats)
+model Chat {
+  // ID Alfanumérico de 8 caracteres
+  id                String      @id @unique @db.Char(8) @map("chat_id")
+  chatType          ChatType    @map("chat_type")
+  // La llave se almacena en el chat base para ser accesible por todos los tipos.
+  enigmaMasterKey   String      @map("enigma_master_key") @db.Text
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @default(now()) @updatedAt @map("updated_at")
+
+  // Relaciones
+  messages          Message[]
+
+  // Relaciones de las tablas hijas
+  individualChat    IndividualChat? // Relación 1-a-1
+  groupChat         GroupChat?      // Relación 1-a-1
+
+  @@map("chats")
+}
+
+// 4.2. Solo para chats individuales
+model IndividualChat {
+  // Clave Foránea y Primaria al mismo tiempo (1 a 1 con Chat)
+  chatId          String   @id @map("chat_id")
+  chat            Chat     @relation(fields: [chatId], references: [id])
+
+  // Participante A
+  userAId         String   @map("user_a_id") @db.Char(8)
+  userA           User     @relation("UserA", fields: [userAId], references: [id])
+
+  // Participante B
+  userBId         String   @map("user_b_id") @db.Char(8)
+  userB           User     @relation("UserB", fields: [userBId], references: [id])
+
+  // Asegura una única conversación entre A y B
+  @@unique([userAId, userBId])
+
+  @@map("individual_chats")
+}
+
+// 4.3. Solo para chats grupales (group_chats)
+model GroupChat {
+  // Clave Foránea y Primaria al mismo tiempo (1 a 1 con Chat)
+  chatId          String   @id @map("chat_id")
+  chat            Chat     @relation(fields: [chatId], references: [id])
+
+  // Creador
+  creatorId       String   @map("creator_id") @db.Char(8)
+  creator         User     @relation(fields: [creatorId], references: [id])
+
+  groupName       String   @map("group_name") @db.VarChar(100)
+  groupDescription String? @map("group_description") @db.Text
+
+  // Relaciones
+  members         GroupMember[]
+
+  @@map("group_chats")
+}
+
+// 4.4. Miembros (solo aplica a grupos)
+model GroupMember {
+  // Clave Primaria Compuesta
+  groupId         String   @map("group_id") @db.Char(8)
+  userId          String   @map("user_id") @db.Char(8)
+
+  @@id([groupId, userId])
+
+  // Relaciones
+  group           GroupChat @relation(fields: [groupId], references: [chatId], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Rol del Miembro
+  role            GroupRole @map("role")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("group_members")
+}
+
+// 4.5. Mensajes aplican a cualquier tipo de chat (messages)
+model Message {
+  // ID Alfanumérico de 8 caracteres (Generado por la aplicación)
+  id              String   @id @unique @db.Char(8) @map("message_id")
+
+  // Claves Foráneas
+  chatId          String   @map("chat_id") @db.Char(8)
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId        String   @map("sender_id") @db.Char(8)
+  sender          User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Contenido Cifrado
+  ciphertext      String   @map("ciphertext") @db.Text
+  sentAt          DateTime @default(now()) @map("sent_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("messages")
 }
