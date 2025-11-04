@@ -54,6 +54,79 @@ export class ChatsService {
     });
   }
 
+  async findByUserId(userId: string) {
+    const groupMembers = await prisma.groupMember.findMany({
+      where: { userId },
+    });
+    const individualChats = await prisma.individualChat.findMany({
+      where: {
+        OR: [
+          { userAId: userId },
+          { userBId: userId },
+        ],
+      },
+    })
+    const chats = await prisma.chat.findMany({
+      where: {
+        id: {
+          in: [
+            ...groupMembers.map((member) => member.groupId),
+            ...individualChats.map((chat) => chat.chatId)
+          ],
+        }
+      }
+    });
+
+    const groupChats = await prisma.groupChat.findMany({
+      where: {
+        chatId: {
+          in: groupMembers.map((member) => member.groupId),
+        }
+      }
+    })
+
+    let absoluteChats = [];
+    for (const chat of chats) {
+      if (chat.chatType === 'GROUP') {
+        absoluteChats.push({
+          ...chat,
+          groupChat: groupChats.find((groupChat) => groupChat.chatId === chat.id),
+          groupMembers: groupMembers.filter((member) => member.groupId === chat.id),
+        });
+      } else {
+        absoluteChats.push({
+          ...chat,
+          individualChat: individualChats.find((individualChat) => individualChat.chatId === chat.id),
+        });
+      }
+    }
+
+    return absoluteChats;
+
+    /* const allChats = await prisma.$queryRaw`
+      SELECT
+        chats.id,
+        chats.chat_type,
+        chats.created_at,
+        chats.updated_at,
+        chats.enigma_master_key,
+        group_chat.group_name,
+        group_chat.group_description,
+        group_member.role,
+        individual_chat.user_a_id,
+        individual_chat.user_b_id,
+      FROM chats
+      JOIN group_chat ON chats.id = group_chat.chat_id
+      JOIN group_member ON chats.id = group_member.group_id
+      JOIN individual_chat ON chats.id = individual_chat.chat_id
+      WHERE
+        individual_chat.user_a_id = ${userId}
+        OR individual_chat.user_b_id = ${userId}
+        OR group_member.user_id = ${userId}
+      ORDER BY chats.updated_at DESC;
+    `; */
+  }
+
   async findById(id: string) {
     const chat = await prisma.chat.findUnique({
       where: { id },

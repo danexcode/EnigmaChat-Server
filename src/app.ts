@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { apiRouter } from '@/routes';
+import { setupAuthStrategies } from '@/auth';
 import { boomErrorHandler, errorHandler, ormErrorHandler } from '@/middlewares/errors.handler';
 
 export const createApp = () => {
@@ -9,6 +10,8 @@ export const createApp = () => {
 
   app.use(express.json());
   app.use(cors());
+
+  setupAuthStrategies();
 
   apiRouter(app);
 

@@ -21,18 +21,16 @@ export class AuthService {
       where: { email },
     });
     if (!user) {
-      throw notFound('User not found');
+      throw notFound('Invalid email or password');
     }
     const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw unauthorized('Invalid password');
+      throw unauthorized('Invalid email or password');
     }
-
-    const token = this.generateToken(user.id);
-    return token;
+    return user;
   }
 
-  async generateToken(userId: string) {
+  async signToken(userId: string) {
     const payload = {
       sub: userId,
       iat: Date.now(),

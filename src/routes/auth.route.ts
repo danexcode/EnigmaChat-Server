@@ -4,16 +4,19 @@ import { badRequest } from '@hapi/boom';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { loginUserSchema, registerUserSchema } from '@/schemas/auth.schema';
+import passport from 'passport';
+import { User } from '@/types';
 
 export const authRouter = express.Router();
 const authService = new AuthService();
 
 authRouter.post('/login',
   validateDataHandler(loginUserSchema, 'body'),
+  passport.authenticate('local', { session: false }),
   async (req, res, next) => {
     try {
-      const { email, password } = req.body;
-      const token = await authService.login(email, password);
+      const user = req.user as User;
+      const token = authService.signToken(user.id);
       res.json({ token });
     } catch (error) {
       next(error);
