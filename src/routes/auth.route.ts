@@ -1,18 +1,17 @@
-import express from 'express';
-import { UsersService } from '@/services/users.service';
-import { badRequest } from '@hapi/boom';
+import { Router } from 'express';
+import { authenticate } from 'passport';
+
+import { User } from '@/types';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { loginUserSchema, registerUserSchema } from '@/schemas/auth.schema';
-import passport from 'passport';
-import { User } from '@/types';
 
-export const authRouter = express.Router();
+export const authRouter = Router();
 const authService = new AuthService();
 
 authRouter.post('/login',
   validateDataHandler(loginUserSchema, 'body'),
-  passport.authenticate('local', { session: false }),
+  authenticate('local', { session: false }),
   async (req, res, next) => {
     try {
       const user = req.user as User;

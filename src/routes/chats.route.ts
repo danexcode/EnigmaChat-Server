@@ -1,4 +1,4 @@
-import passport from 'passport';
+import { authenticate } from 'passport';
 import { Router } from 'express';
 
 import { User } from '@/types';
@@ -12,7 +12,7 @@ const chatsRouter = Router();
 const chatsService = new ChatsService();
 
 chatsRouter.get('/',
-  passport.authenticate('jwt', { session: false }),
+  authenticate('jwt', { session: false }),
   async (req, res, next) => {
     try {
       const user = req.user as User;
@@ -26,7 +26,7 @@ chatsRouter.get('/',
 );
 
 chatsRouter.post('/',
-  passport.authenticate('jwt', { session: false }),
+  authenticate('jwt', { session: false }),
   validateDataHandler(createChatSchema, 'body'),
   async (req, res, next) => {
     try {
@@ -40,7 +40,7 @@ chatsRouter.post('/',
 );
 
 chatsRouter.get('/:id',
-  passport.authenticate('jwt', { session: false }),
+  authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   async (req, res, next) => {
     try {
@@ -54,7 +54,7 @@ chatsRouter.get('/:id',
 );
 
 chatsRouter.get('/:id/messages',
-  passport.authenticate('jwt', { session: false }),
+  authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   async (req, res, next) => {
     try {
@@ -69,7 +69,7 @@ chatsRouter.get('/:id/messages',
 
 // Send message to chat
 chatsRouter.post('/:id/messages',
-  passport.authenticate('jwt', { session: false }),
+  authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   validateDataHandler(createMessageSchema, 'body'),
   async (req, res, next) => {
