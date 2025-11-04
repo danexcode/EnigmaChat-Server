@@ -1,9 +1,10 @@
+import { CreateChatDto } from '@/types/dtos';
 import Joi from 'joi';
 
 const chatId = Joi.string().length(8);
 const userId = Joi.string().length(8);
 
-export const createChatSchema = Joi.object({
+export const createChatSchema: Joi.ObjectSchema<CreateChatDto> = Joi.object({
   type: Joi.string().valid('INDIVIDUAL', 'GROUP').required(),
   creatorId: userId.when('type', { is: 'GROUP', then: Joi.required() }),
   name: Joi.string().when('type', { is: 'GROUP', then: Joi.required() }),
