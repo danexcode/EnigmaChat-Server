@@ -18,7 +18,7 @@ export class UsersService {
       throw conflict('User already exists');
     }
 
-    const hashedPassword = await hash(data.passwordHash, 10);
+    const hashedPassword = await hash(data.password, 10);
 
     const newUser = await prisma.user.create({
       data: {

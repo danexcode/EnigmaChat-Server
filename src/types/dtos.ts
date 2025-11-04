@@ -7,7 +7,7 @@ import type { ChatType } from '@prisma/client';
 export interface CreateUserDto {
   username: string;
   email: string;
-  passwordHash: string;
+  password: string;
 }
 
 export interface UpdateUserDto {
