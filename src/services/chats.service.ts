@@ -55,54 +55,43 @@ export class ChatsService {
   }
 
   async findByUserId(userId: string) {
-    const groupMembers = await prisma.groupMember.findMany({
-      where: { userId },
-    });
-    const individualChats = await prisma.individualChat.findMany({
-      where: {
-        OR: [
-          { userAId: userId },
-          { userBId: userId },
-        ],
-      },
-    })
     const chats = await prisma.chat.findMany({
       where: {
-        id: {
-          in: [
-            ...groupMembers.map((member) => member.groupId),
-            ...individualChats.map((chat) => chat.chatId)
-          ],
-        }
-      }
+        OR: [
+          { individualChat: { userAId: userId } },
+          { individualChat: { userBId: userId } },
+          {
+            groupChat: {
+              members: {
+                some: {
+                  userId: userId,
+                }
+              }
+            }
+          }
+        ]
+      },
+      include: {
+        individualChat: true,
+        groupChat: {
+          include: {
+            creator: true,
+            members: {
+              select: {
+                role: true,
+              },
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
     });
-
-    const groupChats = await prisma.groupChat.findMany({
-      where: {
-        chatId: {
-          in: groupMembers.map((member) => member.groupId),
-        }
-      }
-    })
-
-    let absoluteChats = [];
-    for (const chat of chats) {
-      if (chat.chatType === 'GROUP') {
-        absoluteChats.push({
-          ...chat,
-          groupChat: groupChats.find((groupChat) => groupChat.chatId === chat.id),
-          groupMembers: groupMembers.filter((member) => member.groupId === chat.id),
-        });
-      } else {
-        absoluteChats.push({
-          ...chat,
-          individualChat: individualChats.find((individualChat) => individualChat.chatId === chat.id),
-        });
-      }
-    }
-
-    return absoluteChats;
-
+    return chats;
     /* const allChats = await prisma.$queryRaw`
       SELECT
         chats.id,
@@ -130,6 +119,24 @@ export class ChatsService {
   async findById(id: string) {
     const chat = await prisma.chat.findUnique({
       where: { id },
+      include: {
+        individualChat: {
+          include: {
+            userA: true,
+            userB: true,
+          },
+        },
+        groupChat: {
+          include: {
+            creator: true,
+            members: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
     });
     if (!chat) {
       throw notFound('Chat not found');

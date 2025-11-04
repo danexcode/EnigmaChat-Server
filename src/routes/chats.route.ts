@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { ChatsService } from '@/services/chats.service';
 import { User } from '@/types';
-import { createChatSchema } from '@/schemas/chats.schema';
+import { createChatSchema, findByIdSchema } from '@/schemas/chats.schema';
 import { CreateChatDto } from '@/types/dtos';
 
 const chatsRouter = Router();
@@ -36,3 +36,17 @@ chatsRouter.post('/',
     }
   }
 );
+
+chatsRouter.get('/:id',
+  passport.authenticate('jwt', { session: false }),
+  validateDataHandler(findByIdSchema, 'params'),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const chat = await chatsService.findById(id);
+      res.json(chat);
+    } catch (error) {
+      next(error);
+    }
+  }
+)
