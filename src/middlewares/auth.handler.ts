@@ -4,6 +4,8 @@ import { NextFunction, Request, Response } from "express";
 import { User } from "@/types";
 import { prisma } from "@/server";
 
+//TODO: Refactor this middleware to extract logic
+
 // Validate member role
 export const validateMemberRole = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +30,7 @@ export const validateMemberRole = (...roles: string[]) => {
   }
 }
 
+// Validate message owner
 export const validateMessageOwner = () => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as User;
@@ -48,6 +51,7 @@ export const validateMessageOwner = () => {
   }
 }
 
+// Validate user role or message owner
 export const validateUserRoleOrMessageOwner = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as User;

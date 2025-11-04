@@ -1,4 +1,4 @@
-import type { ChatType } from '@prisma/client';
+import type { ChatType, GroupRole } from '@prisma/client';
 
 // ===================================
 //          USER DTOS
@@ -41,6 +41,12 @@ export interface UpdateChatDto {
 export interface UpdateGroupChatDto {
   name?: string;
   description?: string;
+}
+
+export interface AddGroupMemberDto {
+  groupId: string;
+  userId: string;
+  role: GroupRole;
 }
 
 // ===================================

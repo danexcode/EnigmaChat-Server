@@ -20,4 +20,3 @@ export const findByMessageIdSchema = Joi.object({
   id: chatId.required(),
   messageId: chatId.required(),
 });
-

@@ -7,6 +7,7 @@ import type { CreateChatDto, CreateMessageDto, UpdateChatDto, UpdateGroupChatDto
 export class ChatsService {
   constructor() {}
 
+  // Create chat
   async create(data: CreateChatDto) {
     const chatId = generateShortId();
     const { type, creatorId, name, description, participants } = data;
@@ -54,6 +55,7 @@ export class ChatsService {
     });
   }
 
+  // Send message
   async sendMessage(chatId: string, data: CreateMessageDto) {
     const message = await prisma.message.create({
       data: {
@@ -66,6 +68,7 @@ export class ChatsService {
     return message;
   }
 
+  // Find chats by user id
   async findByUserId(userId: string) {
     const chats = await prisma.chat.findMany({
       where: {
@@ -128,6 +131,7 @@ export class ChatsService {
     `; */
   }
 
+  // Find chat by id
   async findById(id: string) {
     const chat = await prisma.chat.findUnique({
       where: { id },
@@ -156,6 +160,7 @@ export class ChatsService {
     return chat;
   }
 
+  // Find messages by chat id
   async findMessagesByChatId(chatId: string) {
     const messages = await prisma.message.findMany({
       where: { chatId },
@@ -166,6 +171,7 @@ export class ChatsService {
     return messages;
   }
 
+  // Update chat
   async updateChat(id: string, data: UpdateChatDto) {
     const chat = await prisma.chat.update({
       where: { id },
@@ -177,6 +183,7 @@ export class ChatsService {
     return chat;
   }
 
+  // Update group chat
   async updateGroupChat(id: string, data: UpdateGroupChatDto) {
     const chat = await prisma.groupChat.update({
       where: { chatId: id },
@@ -194,6 +201,7 @@ export class ChatsService {
     return chat;
   }
 
+  // Delete chat
   async delete(id: string) {
     const deletedChat = await prisma.chat.delete({
       where: { id },
@@ -201,10 +209,15 @@ export class ChatsService {
     return deletedChat;
   }
 
+  // Delete message
   async deleteMessage(messageId: string) {
     const deletedMessage = await prisma.message.delete({
       where: { id: messageId },
     });
     return deletedMessage;
+  }
+
+  static async rotateEnigmaMasterKey(chatId: string) {
+    //TODO
   }
 }
