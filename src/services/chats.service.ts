@@ -1,9 +1,8 @@
-import { PrismaClient, ChatType } from '@prisma/client';
-import { generateShortId } from '@/utils/idGenerator';
-import type { CreateChatDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
 import { notFound } from '@hapi/boom';
 
-const prisma = new PrismaClient();
+import { prisma } from '@/server';
+import { generateShortId } from '@/utils/idGenerator';
+import type { CreateChatDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
 
 export class ChatsService {
   constructor() {}

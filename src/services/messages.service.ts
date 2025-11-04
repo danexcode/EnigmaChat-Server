@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
-import { generateShortId } from '@/utils/idGenerator';
-import type { CreateMessageDto } from '@/types/dtos';
 
-const prisma = new PrismaClient();
+import { prisma } from '@/server';
+import type { CreateMessageDto } from '@/types/dtos';
+import { generateShortId } from '@/utils/idGenerator';
 
 export class MessagesService {
   constructor() {}
@@ -17,12 +16,13 @@ export class MessagesService {
     return newMessage;
   }
 
-  async findByChatId(chatId: string) {
-    return prisma.message.findMany({
+  async findMessagesByChatId(chatId: string) {
+    const messages = prisma.message.findMany({
       where: { chatId },
       orderBy: {
         sentAt: 'asc',
       },
     });
+    return messages;
   }
 }
