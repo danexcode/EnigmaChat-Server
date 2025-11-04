@@ -1,6 +1,7 @@
 import { PrismaClient, ChatType } from '@prisma/client';
 import { generateShortId } from '@/utils/idGenerator';
-import type { CreateChatDto } from '@/types/dtos';
+import type { CreateChatDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
+import { notFound } from '@hapi/boom';
 
 const prisma = new PrismaClient();
 
@@ -54,9 +55,48 @@ export class ChatsService {
     });
   }
 
-  async findById() {}
+  async findById(id: string) {
+    const chat = await prisma.chat.findUnique({
+      where: { id },
+    });
+    if (!chat) {
+      throw notFound('Chat not found');
+    }
+    return chat;
+  }
 
-  async update() {}
+  async updateChat(id: string, data: UpdateChatDto) {
+    const chat = await prisma.chat.update({
+      where: { id },
+      data: {
+        enigmaMasterKey: data.enigmaMasterKey,
+        updatedAt: new Date(),
+      }
+    });
+    return chat;
+  }
 
-  async delete() {}
+  async updateGroupChat(id: string, data: UpdateGroupChatDto) {
+    const chat = await prisma.groupChat.update({
+      where: { chatId: id },
+      data: {
+        groupName: data.name,
+        groupDescription: data.description,
+      }
+    });
+    await prisma.chat.update({
+      where: { id },
+      data: {
+        updatedAt: new Date(),
+      }
+    });
+    return chat;
+  }
+
+  async delete(id: string) {
+    const deletedChat = await prisma.chat.delete({
+      where: { id },
+    });
+    return deletedChat;
+  }
 }

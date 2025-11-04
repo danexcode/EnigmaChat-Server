@@ -87,7 +87,7 @@ model Chat {
 model IndividualChat {
   // Clave Foránea y Primaria al mismo tiempo (1 a 1 con Chat)
   chatId          String   @id @map("chat_id")
-  chat            Chat     @relation(fields: [chatId], references: [id])
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   // Participante A
   userAId         String   @map("user_a_id") @db.Char(8)
@@ -107,7 +107,7 @@ model IndividualChat {
 model GroupChat {
   // Clave Foránea y Primaria al mismo tiempo (1 a 1 con Chat)
   chatId          String   @id @map("chat_id")
-  chat            Chat     @relation(fields: [chatId], references: [id])
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   // Creador
   creatorId       String   @map("creator_id") @db.Char(8)

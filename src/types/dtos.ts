@@ -30,7 +30,17 @@ export interface CreateChatDto {
   creatorId?: string;
   name?: string;
   description?: string;
+  // When is a individual chat, this array will have two users
   participants: string[];
+}
+
+export interface UpdateChatDto {
+  enigmaMasterKey?: string;
+}
+
+export interface UpdateGroupChatDto {
+  name?: string;
+  description?: string;
 }
 
 // ===================================
