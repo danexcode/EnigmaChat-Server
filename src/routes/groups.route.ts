@@ -6,7 +6,7 @@ import { validateMemberRole, authorizeMemberRemoval } from "@/middlewares/auth.h
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { addMemberToGroupSchema, removeMemberFromGroupSchema } from '@/schemas/groups.schema';
 
-const groupsRouter = Router();
+export const groupsRouter = Router();
 const groupsService = new GroupsService();
 
 // Get group members

@@ -9,7 +9,7 @@ import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { authorizeMessageDeletion } from '@/middlewares/auth.handler';
 import { createChatSchema, findByIdSchema, findByMessageIdSchema, rotateChatKeySchema } from '@/schemas/chats.schema';
 
-const chatsRouter = Router();
+export const chatsRouter = Router();
 const chatsService = new ChatsService();
 
 // Get user chats
