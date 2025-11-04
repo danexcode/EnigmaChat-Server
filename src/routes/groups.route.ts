@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate } from "passport";
 
 import { GroupsService } from "@/services/groups.service";
-import { validateMemberRole } from "@/middlewares/auth.handler";
+import { validateMemberRole, authorizeMemberRemoval } from "@/middlewares/auth.handler";
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { addMemberToGroupSchema, removeMemberFromGroupSchema } from '@/schemas/groups.schema';
 
@@ -41,8 +41,8 @@ groupsRouter.post('/:id/members',
 
 groupsRouter.delete('/:id/members/:userId',
   authenticate('jwt', { session: false }),
-  validateMemberRole('ADMIN'),
   validateDataHandler(removeMemberFromGroupSchema, 'params'),
+  authorizeMemberRemoval('ADMIN'),
   async (req, res, next) => {
     try {
       const groupId = req.params.id;

@@ -52,7 +52,7 @@ export const validateMessageOwner = () => {
 }
 
 // Validate user role or message owner
-export const validateUserRoleOrMessageOwner = (...roles: string[]) => {
+export const authorizeMessageDeletion = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as User;
     const userId = user.id;
@@ -79,8 +79,40 @@ export const validateUserRoleOrMessageOwner = (...roles: string[]) => {
       next(forbidden('You are not authorized to perform this action'))
     }
 
+    const isAdmin = member && roles.includes(member.role);
+    const isSelf = message && message.senderId === userId;
+
     // If the user is not an admin member and the message does not belong to the user
-    if ((member && !roles.includes(member.role)) && (message && message.senderId !== userId)) {
+    if (!isAdmin && !isSelf) {
+      next(forbidden('You are not authorized to perform this action'))
+    }
+
+    next();
+  }
+}
+
+// Validate member role or group participant
+export const authorizeMemberRemoval = (...roles: string[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const userAuthenticated = req.user as User;
+    const userAuthenticatedId = userAuthenticated.id;
+    const chatId = req.params.id;
+    const userToDeleteId = req.params.userId;
+
+    const member = await prisma.groupMember.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: chatId,
+          userId: userAuthenticatedId,
+        },
+      },
+    });
+
+    const isAdmin = member && roles.includes(member.role);
+    const isSelf = userAuthenticatedId === userToDeleteId;
+
+    // If the user is not an admin member and the user is not the user to delete
+    if (!isAdmin && !isSelf) {
       next(forbidden('You are not authorized to perform this action'))
     }
 
