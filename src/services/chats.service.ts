@@ -217,7 +217,7 @@ export class ChatsService {
     return deletedMessage;
   }
 
-  static async rotateEnigmaMasterKey(chatId: string) {
+  async rotateEnigmaMasterKey(chatId: string, key: string) {
     //TODO
   }
 }

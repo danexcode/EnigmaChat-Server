@@ -7,7 +7,7 @@ import { CreateChatDto, CreateMessageDto } from '@/types/dtos';
 import { createMessageSchema } from '@/schemas/messages.schema';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { authorizeMessageDeletion } from '@/middlewares/auth.handler';
-import { createChatSchema, findByIdSchema, findByMessageIdSchema } from '@/schemas/chats.schema';
+import { createChatSchema, findByIdSchema, findByMessageIdSchema, rotateChatKeySchema } from '@/schemas/chats.schema';
 
 const chatsRouter = Router();
 const chatsService = new ChatsService();
@@ -57,6 +57,22 @@ chatsRouter.get('/:id',
   }
 );
 
+chatsRouter.put('/:id/rotate-key',
+  authenticate('jwt', { session: false }),
+  validateDataHandler(findByIdSchema, 'params'),
+  validateDataHandler(rotateChatKeySchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { key } = req.body;
+      const chat = await chatsService.rotateEnigmaMasterKey(id, key);
+      res.json(chat);
+    } catch (error) {
+      next(error);
+    }
+  }
+)
+
 // Get messages by chat id
 chatsRouter.get('/:id/messages',
   authenticate('jwt', { session: false }),
@@ -89,6 +105,7 @@ chatsRouter.post('/:id/messages',
   }
 );
 
+// Delete message
 chatsRouter.delete('/:id/messages/:messageId',
   authenticate('jwt', { session: false }),
   validateDataHandler(findByMessageIdSchema, 'params'),

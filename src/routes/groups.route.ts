@@ -9,6 +9,7 @@ import { addMemberToGroupSchema, removeMemberFromGroupSchema } from '@/schemas/g
 const groupsRouter = Router();
 const groupsService = new GroupsService();
 
+// Get group members
 groupsRouter.get('/:id/members',
   authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN', 'MEMBER'),
@@ -23,6 +24,7 @@ groupsRouter.get('/:id/members',
   }
 );
 
+// Add member to group
 groupsRouter.post('/:id/members',
   authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN'),
@@ -39,6 +41,7 @@ groupsRouter.post('/:id/members',
   }
 );
 
+// Remove member from group
 groupsRouter.delete('/:id/members/:userId',
   authenticate('jwt', { session: false }),
   validateDataHandler(removeMemberFromGroupSchema, 'params'),

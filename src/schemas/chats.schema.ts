@@ -20,3 +20,7 @@ export const findByMessageIdSchema = Joi.object({
   id: chatId.required(),
   messageId: chatId.required(),
 });
+
+export const rotateChatKeySchema = Joi.object({
+  key: Joi.string().required(),
+});
