@@ -15,3 +15,9 @@ export const createChatSchema: Joi.ObjectSchema<CreateChatDto> = Joi.object({
 export const findByIdSchema = Joi.object({
   id: chatId.required(),
 });
+
+export const findByMessageIdSchema = Joi.object({
+  id: chatId.required(),
+  messageId: chatId.required(),
+});
+

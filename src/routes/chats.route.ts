@@ -6,7 +6,7 @@ import { ChatsService } from '@/services/chats.service';
 import { CreateChatDto, CreateMessageDto } from '@/types/dtos';
 import { createMessageSchema } from '@/schemas/messages.schema';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
-import { validateMemberRole } from '@/middlewares/auth.handler';
+import { validateUserRoleOrMessageOwner } from '@/middlewares/auth.handler';
 import { createChatSchema, findByIdSchema, findByMessageIdSchema } from '@/schemas/chats.schema';
 
 const chatsRouter = Router();
@@ -92,7 +92,7 @@ chatsRouter.post('/:id/messages',
 chatsRouter.delete('/:id/messages/:messageId',
   authenticate('jwt', { session: false }),
   validateDataHandler(findByMessageIdSchema, 'params'),
-  validateMemberRole('ADMIN', 'MEMBER'),
+  validateUserRoleOrMessageOwner('ADMIN'),
   async (req, res, next) => {
     try {
       const { messageId } = req.params;
