@@ -200,4 +200,11 @@ export class ChatsService {
     });
     return deletedChat;
   }
+
+  async deleteMessage(messageId: string) {
+    const deletedMessage = await prisma.message.delete({
+      where: { id: messageId },
+    });
+    return deletedMessage;
+  }
 }
