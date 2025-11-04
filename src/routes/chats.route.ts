@@ -1,10 +1,12 @@
 import passport from 'passport';
 import { Router } from 'express';
-import { validateDataHandler } from '@/middlewares/validateData.handler';
-import { ChatsService } from '@/services/chats.service';
+
 import { User } from '@/types';
+import { ChatsService } from '@/services/chats.service';
+import { CreateChatDto, CreateMessageDto } from '@/types/dtos';
+import { createMessageSchema } from '@/schemas/messages.schema';
+import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { createChatSchema, findByIdSchema } from '@/schemas/chats.schema';
-import { CreateChatDto } from '@/types/dtos';
 
 const chatsRouter = Router();
 const chatsService = new ChatsService();
@@ -49,4 +51,35 @@ chatsRouter.get('/:id',
       next(error);
     }
   }
-)
+);
+
+chatsRouter.get('/:id/messages',
+  passport.authenticate('jwt', { session: false }),
+  validateDataHandler(findByIdSchema, 'params'),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const messages = await chatsService.findMessagesByChatId(id);
+      res.json(messages);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Send message to chat
+chatsRouter.post('/:id/messages',
+  passport.authenticate('jwt', { session: false }),
+  validateDataHandler(findByIdSchema, 'params'),
+  validateDataHandler(createMessageSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const body: CreateMessageDto = req.body;
+      const messages = await chatsService.sendMessage(id, body);
+      res.json(messages);
+    } catch (error) {
+      next(error);
+    }
+  }
+);

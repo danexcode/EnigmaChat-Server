@@ -2,7 +2,7 @@ import { notFound } from '@hapi/boom';
 
 import { prisma } from '@/server';
 import { generateShortId } from '@/utils/idGenerator';
-import type { CreateChatDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
+import type { CreateChatDto, CreateMessageDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
 
 export class ChatsService {
   constructor() {}
@@ -52,6 +52,18 @@ export class ChatsService {
 
       return chat;
     });
+  }
+
+  async sendMessage(chatId: string, data: CreateMessageDto) {
+    const message = await prisma.message.create({
+      data: {
+        id: generateShortId(),
+        chatId: chatId,
+        senderId: data.senderId,
+        ciphertext: data.ciphertext,
+      },
+    });
+    return message;
   }
 
   async findByUserId(userId: string) {
@@ -142,6 +154,16 @@ export class ChatsService {
       throw notFound('Chat not found');
     }
     return chat;
+  }
+
+  async findMessagesByChatId(chatId: string) {
+    const messages = await prisma.message.findMany({
+      where: { chatId },
+      orderBy: {
+        sentAt: 'desc',
+      },
+    });
+    return messages;
   }
 
   async updateChat(id: string, data: UpdateChatDto) {
