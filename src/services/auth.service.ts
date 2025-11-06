@@ -1,10 +1,13 @@
-import { prisma } from "@/server";
-import { notFound, unauthorized } from "@hapi/boom";
-import { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { compare } from "bcryptjs";
+import { toDataURL } from "qrcode";
+import { GeneratedSecret, generateSecret } from "speakeasy";
+import { badImplementation, notFound, unauthorized } from "@hapi/boom";
+
 import { config } from "@/config";
-import { UsersService } from '@/services/users.service'
+import { prisma } from "@/server";
 import { CreateUserDto } from "@/types/dtos";
+import { UsersService } from '@/services/users.service'
 
 const userService = new UsersService();
 
@@ -44,4 +47,20 @@ export class AuthService {
   async logout() {}
 
   async refresh() {}
+
+  async generate2fa() {
+    const secret: GeneratedSecret = generateSecret({
+      name: "EnigmaChat",
+    });
+
+    if (!secret.otpauth_url) {
+      throw badImplementation('Error generating QR code');
+    }
+    const data = await toDataURL(secret.otpauth_url);
+
+    return {
+      secret: secret.base32,
+      qrCode: data,
+    }
+  }
 }

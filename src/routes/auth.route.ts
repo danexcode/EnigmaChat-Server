@@ -39,3 +39,15 @@ authRouter.post('/register',
     }
   }
 );
+
+authRouter.post('/setup-2fa',
+  authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      const user2fa = await authService.generate2fa();
+      res.json(user2fa);
+    } catch (error) {
+      next(`Error generating QR code: ${error}`);
+    }
+  }
+);
