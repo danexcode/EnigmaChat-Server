@@ -4,7 +4,7 @@ import { authenticate } from 'passport';
 import { User } from '@/types';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
-import { confirm2faSchema, loginUserSchema, registerUserSchema } from '@/schemas/auth.schema';
+import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
 
 export const authRouter = Router();
 const authService = new AuthService();
@@ -44,11 +44,10 @@ authRouter.post('/setup-2fa',
   authenticate('jwt', { session: false }),
   async (req, res, next) => {
     try {
-      const user = req.user as User;
-      const user2fa = await authService.generate2fa(user.id);
+      const user2fa = await authService.generate2fa();
       res.json(user2fa);
     } catch (error) {
-      next(`Error generating QR code: ${error}`);
+      next(error);
     }
   }
 );
@@ -64,7 +63,33 @@ authRouter.post('/confirm-2fa',
       const message = await authService.confirm2fa(user.id, token, secret);
       res.status(200).json(message);
     } catch (error) {
-      next(`Error verifying 2FA: ${error}`);
+      next(error);
+    }
+  }
+);
+
+authRouter.post('/disable-2fa',
+  authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      const user = req.user as User;
+      const message = await authService.disable2fa(user.id);
+      res.status(200).json(message);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+authRouter.post('/verify-2fa',
+  validateDataHandler(verify2faSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const { userId, token } = req.body;
+      const message = await authService.verify2fa(userId, token);
+      res.status(200).json(message);
+    } catch (error) {
+      next(error);
     }
   }
 );

@@ -48,13 +48,13 @@ export class AuthService {
 
   async refresh() {}
 
-  async generate2fa(userId: string) {
+  async generate2fa() {
     const secret: GeneratedSecret = generateSecret({
       name: "EnigmaChat",
     });
 
     if (!secret.otpauth_url) {
-      throw badImplementation('Error generating QR code');
+      throw badImplementation('Error generating authentication code');
     }
 
     const data = await toDataURL(secret.otpauth_url);
@@ -82,7 +82,7 @@ export class AuthService {
     });
 
     if (!isVerified) {
-      throw unauthorized('Invalid 2FA token');
+      throw unauthorized('Invalid authentication token');
     }
 
     // Si la verificación es exitosa, guardamos el secreto en la base de datos
@@ -96,6 +96,32 @@ export class AuthService {
     });
 
     return { message: '2FA verified and activated successfully' };
+  }
+
+  async verify2fa(userId: string, token: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw notFound('User not found');
+    }
+
+    if (!user.twoFactorSecret) {
+      throw unauthorized('2FA not enabled');
+    }
+
+    const isVerified = totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token,
+    });
+
+    if (!isVerified) {
+      throw unauthorized('Invalid 2FA token');
+    }
+
+    return { message: '2FA verified successfully' };
   }
 
   async disable2fa(userId: string) {
