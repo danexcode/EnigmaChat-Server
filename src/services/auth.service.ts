@@ -8,13 +8,8 @@ import { config } from "@/config";
 import { prisma } from "@/server";
 import { CreateUserDto } from "@/types/dtos";
 import { UsersService } from '@/services/users.service';
-
-type JwtPayload = {
-  sub: string;
-  purpose: 'auth' | '2fa' | 'reset-password'; // Tipos de propósito permitidos
-  iat: number;
-  exp: number;
-};
+import { JwtPayload } from "@/types";
+import { LoginResponse } from "@/types/response";
 
 const userService = new UsersService();
 
@@ -157,6 +152,19 @@ export class AuthService {
       throw unauthorized('Invalid 2FA token');
     }
 
-    return { message: '2FA verified successfully' };
+    const authToken = await this.signAuthToken(userId);
+
+    const response: LoginResponse = {
+      token: authToken,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        imageUrl: user.imageUrl || undefined,
+        is2faEnabled: user.is2faEnabled,
+      },
+    };
+
+    return response;
   }
 }

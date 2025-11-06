@@ -1,7 +1,7 @@
 import { authenticate } from 'passport';
 import { Router } from 'express';
 
-import { User } from '@/types';
+import { JwtPayload } from '@/types';
 import { ChatsService } from '@/services/chats.service';
 import { CreateChatDto, CreateMessageDto } from '@/types/dtos';
 import { createMessageSchema } from '@/schemas/messages.schema';
@@ -17,8 +17,8 @@ chatsRouter.get('/',
   authenticate('jwt', { session: false }),
   async (req, res, next) => {
     try {
-      const user = req.user as User;
-      const userId = user.id;
+      const user = req.user as JwtPayload;
+      const userId = user.sub;
       const chats = await chatsService.findByUserId(userId);
       res.json(chats);
     } catch (error) {

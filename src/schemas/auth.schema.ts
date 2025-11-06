@@ -17,6 +17,5 @@ export const confirm2faSchema = Joi.object({
 });
 
 export const verify2faSchema = Joi.object({
-  userId: Joi.string().required(),
   token: Joi.string().pattern(/^[0-9]{6}$/).required(),
 });

@@ -8,6 +8,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  imageUrl?: string;
   passwordHash?: string;
   twoFactorSecret?: string | null;
   is2faEnabled: boolean;
@@ -52,3 +53,14 @@ export interface Message {
   sentAt: Date;
   updatedAt: Date;
 }
+
+// ===================================
+//          UTILS TYPES
+// ===================================
+
+export interface JwtPayload {
+  sub: string;
+  purpose: 'auth' | '2fa' | 'reset-password';
+  iat: number;
+  exp: number;
+};
