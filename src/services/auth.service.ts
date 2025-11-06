@@ -7,7 +7,14 @@ import { badImplementation, notFound, unauthorized } from "@hapi/boom";
 import { config } from "@/config";
 import { prisma } from "@/server";
 import { CreateUserDto } from "@/types/dtos";
-import { UsersService } from '@/services/users.service'
+import { UsersService } from '@/services/users.service';
+
+type JwtPayload = {
+  sub: string;
+  purpose: 'auth' | '2fa' | 'reset-password'; // Tipos de propósito permitidos
+  iat: number;
+  exp: number;
+};
 
 const userService = new UsersService();
 
@@ -33,20 +40,29 @@ export class AuthService {
     return user;
   }
 
-  async signToken(userId: string) {
-    const payload = {
+  async signAuthToken(userId: string) {
+    const payload: JwtPayload = {
       sub: userId,
+      purpose: 'auth',
       iat: Date.now(),
-      exp: Date.now() + 60 * 60 * 1000,
+      exp: Date.now() + 24 * 60 * 60 * 1000,
     }
     return jwt.sign(payload, config.auth.jwtSecret, {
       expiresIn: '24h'
     });
   }
 
-  async logout() {}
-
-  async refresh() {}
+  async sign2faToken(userId: string) {
+    const payload: JwtPayload = {
+      sub: userId,
+      purpose: '2fa',
+      iat: Date.now(),
+      exp: Date.now() + 5 * 60 * 1000,
+    }
+    return jwt.sign(payload, config.auth.jwt2faSecret, {
+      expiresIn: '5m'
+    });
+  }
 
   async generate2fa() {
     const secret: GeneratedSecret = generateSecret({
@@ -98,6 +114,26 @@ export class AuthService {
     return { message: '2FA verified and activated successfully' };
   }
 
+  async disable2fa(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw notFound('User not found');
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorSecret: null,
+        is2faEnabled: false
+      },
+    });
+
+    return { message: '2FA disabled successfully' };
+  }
+
   async verify2fa(userId: string, token: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -122,25 +158,5 @@ export class AuthService {
     }
 
     return { message: '2FA verified successfully' };
-  }
-
-  async disable2fa(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw notFound('User not found');
-    }
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        twoFactorSecret: null,
-        is2faEnabled: false
-      },
-    });
-
-    return { message: '2FA disabled successfully' };
   }
 }

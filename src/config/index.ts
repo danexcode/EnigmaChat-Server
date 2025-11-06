@@ -26,6 +26,8 @@ export const config = {
 
   // Configuración de autenticación
   auth: {
+    jwt2faSecret: process.env.JWT_2FA_SECRET || 'your-default-secret-for-dev',
+    jwt2faExpiresIn: process.env.JWT_2FA_EXPIRES_IN || '5m',
     jwtSecret: process.env.JWT_SECRET || 'your-default-secret-for-dev',
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
   },
