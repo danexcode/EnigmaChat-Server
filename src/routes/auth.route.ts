@@ -5,6 +5,7 @@ import { User } from '@/types';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
+import { LoginResponse } from '@/types/response';
 
 export const authRouter = Router();
 const authService = new AuthService();
@@ -15,8 +16,26 @@ authRouter.post('/login',
   async (req, res, next) => {
     try {
       const user = req.user as User;
-      const token = authService.signToken(user.id);
-      res.json({ token });
+      const response: LoginResponse = {
+        token: '',
+        required2fa: false,
+      };
+      if (user.is2faEnabled) {
+        response.token = await authService.sign2faToken(user.id);
+        response.required2fa = true;
+        response.message = '2FA verification required';
+      } else {
+        response.token = await authService.signAuthToken(user.id);
+        response.user = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          is2faEnabled: user.is2faEnabled,
+        };
+        response.message = 'Login successful';
+      }
+
+      res.json(response);
     } catch (error) {
       next(error);
     }
