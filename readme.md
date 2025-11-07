@@ -1,52 +1,337 @@
-# 🛡️ API REST: Enigma Chat - Documentación de Endpoints
+# 🛡️ API REST: Enigma Chat - Documentación de la API
 
-Este documento detalla la interfaz de la API REST para el backend de Enigma Chat, basado en la arquitectura de Herencia de Tabla Única (`Chat`) y la autenticación robusta con 2FA.
+Este documento detalla la interfaz de la API REST para el backend de Enigma Chat, incluyendo autenticación robusta con 2FA y cifrado de extremo a extremo.
 
 ## 🔑 Convenciones Generales
 
-* **IDs:** Todos los identificadores (`:userId`, `:chatId`, `:messageId`) son **cadenas alfanuméricas de 8 caracteres** (`CHAR(8)`) generadas por `nanoid`.
-* **AuthN (Autenticación):** Requiere un **JWT** válido en el encabezado `Authorization: Bearer <token>`.
-* **AuthZ (Autorización):** Requiere AuthN y una verificación de **rol/pertenencia** al recurso.
-* **Cifrado:** Todas las operaciones de cifrado/descifrado (`RF-C.1`, `RF-C.2`) se realizan **exclusivamente en el backend**. El frontend solo envía/recibe texto plano.
+* **IDs:** Todos los identificadores son cadenas alfanuméricas generadas por `nanoid`
+* **Autenticación:** Requiere JWT en el encabezado `Authorization: Bearer <token>`
+* **Formato de fechas:** ISO 8601 (ej: `2025-11-06T20:43:00.000Z`)
+* **Cifrado:** Todas las operaciones de cifrado/descifrado se realizan en el backend
+
+## 📚 Índice
+
+1. [Autenticación y Usuarios](#1-autenticación-y-usuarios)
+2. [Chats](#2-chats)
+3. [Grupos](#3-grupos)
+4. [WebSocket](#4-websocket)
+5. [Manejo de Errores](#5-manejo-de-errores)
 
 ---
 
-## 1. Endpoints de Autenticación y Cuentas (`/api/auth`)
+## 1. Autenticación y Usuarios
 
-| Método | Ruta | Descripción | Seguridad | Cuerpo (Body) |
-| :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/register` | **RF-A.1:** Crea un nuevo usuario. (Incluye Hashing de contraseña). | Ninguna | `username`, `email`, `password` |
-| `POST` | `/login` | **RF-A.2:** Inicia sesión. Retorna JWT o estado de "requiere 2FA". | Ninguna | `username`, `password` |
-| `POST` | `/verify-2fa` | **RF-A.2:** Completa el login verificando el token TOTP. | Ninguna | `username`, `token_2fa` |
-| `POST` | `/setup-2fa` | **RF-A.2 (Setup):** Genera la clave secreta y URL del QR. | AuthN | Ninguna |
-| `POST` | `/confirm-2fa` | **RF-A.2 (Confirm):** Activa 2FA permanentemente. | AuthN | `token_2fa` |
-| `GET` | `/profile` | Obtiene el perfil del usuario autenticado. | AuthN | Ninguna |
-| `POST` | `/reset-password` | **RF-A.3:** Restablece la contraseña con token. | Ninguna | `token`, `new_password` |
+### `POST /api/auth/register`
+- **Descripción:** Registra un nuevo usuario
+- **Autenticación:** No requiere autenticación
+- **Request Body:**
+  ```json
+  {
+    "username": "string",
+    "email": "string (formato email)",
+    "password": "string"
+  }
+  ```
+- **Response Body:**
+  ```json
+  {
+    "user": {
+      "id": "string",
+      "username": "string",
+      "email": "string",
+      "is2faEnabled": false
+    }
+  }
+  ```
+- **Status Codes:** `201 Created`, `400 Bad Request`, `409 Conflict`
+
+### `POST /api/auth/login`
+- **Descripción:** Inicia sesión de un usuario. Si el usuario tiene el 2FA activado, responde con un token de 2FA en lugar de un token de sesión.
+- **Autenticación:** No requiere autenticación
+- **Request Body:**
+  ```json
+  {
+    "email": "string (formato email)",
+    "password": "string"
+  }
+  ```
+- **Response Body (2FA disabled):**
+  ```json
+  {
+    "token": "string (JWT)",
+    "required2fa": false,
+    "user": {
+      "id": "string",
+      "username": "string",
+      "email": "string",
+      "imageUrl": "string (opcional)",
+      "is2faEnabled": false
+    }
+  }
+  ```
+- **Response Body (2FA enabled):**
+  ```json
+  {
+    "token": "string (2FA-JWT)",
+    "required2fa": true,
+    "message": "2FA verification required"
+  }
+  ```
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+
+### `POST /api/auth/setup-2fa`
+- **Descripción:** Configura la autenticación de dos factores
+- **Autenticación:** Requiere JWT
+- **Response Body:**
+  ```json
+  {
+    "secret": "string",
+    "qrCode": "string"
+  }
+  ```
+- **Status Codes:** `200 OK`, `401 Unauthorized`
+
+### `POST /api/auth/confirm-2fa`
+- **Descripción:** Confirma la configuración 2FA con un token
+- **Autenticación:** Requiere JWT
+- **Request Body:**
+  ```json
+  {
+    "token": "string",
+    "secret": "string"
+  }
+  ```
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+
+### `POST /api/auth/verify-2fa`
+- **Descripción:** Verifica un código 2FA
+- **Autenticación:** Requiere JWT temporal de 2FA
+- **Request Body:**
+  ```json
+  {
+    "token": "string"
+  }
+  ```
+- **Response Body:**
+  ```json
+  {
+    "token": "string (2FA-JWT completo)",
+    "user": {
+      "id": "string",
+      "username": "string",
+      "email": "string",
+      "imageUrl": "string (opcional)",
+      "is2faEnabled": true
+    }
+  }
+  ```
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+
+### `POST /api/auth/disable-2fa`
+- **Descripción:** Desactiva la autenticación de dos factores
+- **Autenticación:** Requiere JWT
+- **Status Codes:** `200 OK`, `401 Unauthorized`
+
+### `GET /api/users`
+- **Descripción:** Busca usuarios por nombre de usuario o email
+- **Autenticación:** Requiere JWT
+- **Query Parameters:**
+  - `username`: string (opcional)
+  - `email`: string (opcional)
+- **Response Body:**
+  ```json
+  [{
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "imageUrl": "string (opcional)"
+  }]
+  ```
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
 
 ---
 
-## 2. Endpoints de Chats y Mensajería (`/api/chats`)
+## 2. Chats
 
-| Método | Ruta | Descripción | Seguridad | Parámetros / Cuerpo |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Lista todos los chats (Individuales y Grupales) del usuario. | AuthN | Query Params: `type` (opcional: `INDIVIDUAL` o `GROUP`) |
-| `POST` | `/` | **RF-G.1:** Crea un chat. | AuthN | `chatType`, `groupName` (si es GROUP), `targetUserId` (si es INDIVIDUAL) |
-| `GET` | `/:chatId/messages` | **RF-C.2:** Obtiene y **descifra** los mensajes del chat. | AuthZ (Miembro del Chat) | Query Params: `limit`, `offset` |
-| `POST` | `/:chatId/messages` | **RF-C.1:** Envía el mensaje (texto plano). El servidor cifra. | AuthZ (Miembro del Chat) | Body: `content` (texto plano) |
-| `DELETE` | `/:chatId/messages/:messageId` | Elimina un mensaje. | AuthZ (Miembro y Propietario/Admin) | Ninguno |
+### `GET /api/chats`
+- **Descripción:** Obtiene la lista de chats del usuario autenticado
+- **Autenticación:** Requiere JWT
+- **Response Body:**
+  ```json
+  [{
+    "id": "string",
+    "type": "string",
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)",
+    "participants": [{
+      "id": "string",
+      "username": "string",
+      "email": "string",
+      "imageUrl": "string (opcional)"
+    }]
+  }]
+  ```
+- **Status Codes:** `200 OK`, `401 Unauthorized`
+
+### `POST /api/chats`
+- **Descripción:** Crea un nuevo chat
+- **Autenticación:** Requiere JWT
+- **Request Body:**
+  ```json
+  {
+    "participantIds": ["string"],
+    "type": "DIRECT|GROUP"
+  }
+  ```
+- **Response Body:** Igual que GET /api/chats
+- **Status Codes:** `201 Created`, `400 Bad Request`, `401 Unauthorized`
+
+### `GET /api/chats/:id/messages`
+- **Descripción:** Obtiene los mensajes de un chat
+- **Autenticación:** Requiere JWT
+- **Response Body:**
+  ```json
+  [{
+    "id": "string",
+    "content": "string",
+    "senderId": "string",
+    "chatId": "string",
+    "createdAt": "string (ISO 8601)",
+    "updatedAt": "string (ISO 8601)",
+    "sender": {
+      "id": "string",
+      "username": "string",
+      "imageUrl": "string (opcional)"
+    }
+  }]
+  ```
+- **Status Codes:** `200 OK`, `401 Unauthorized`, `403 Forbidden`
+
+### `POST /api/chats/:id/messages`
+- **Descripción:** Envía un mensaje a un chat
+- **Autenticación:** Requiere JWT
+- **Request Body:**
+  ```json
+  {
+    "content": "string"
+  }
+  ```
+- **Response Body:** Mensaje creado (mismo formato que GET /api/chats/:id/messages)
+- **Status Codes:** `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`
 
 ---
 
-## 3. Endpoints de Gestión de Grupos (`/api/groups`)
+## 3. Grupos
 
-Rutas especializadas para chats de tipo `GROUP`. El `chatId` en estas rutas pertenece a un `GroupChat`.
+### `GET /api/groups/:id/members`
+- **Descripción:** Obtiene los miembros de un grupo
+- **Autenticación:** Requiere JWT
+- **Response Body:**
+  ```json
+  [{
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "imageUrl": "string (opcional)",
+    "role": "ADMIN|MEMBER"
+  }]
+  ```
+- **Status Codes:** `200 OK`, `401 Unauthorized`, `403 Forbidden`
 
-| Método | Ruta | Descripción | Seguridad | Cuerpo de Solicitud (Body) |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/:chatId/members` | Obtiene la lista de miembros y sus roles. | AuthZ (Miembro del Grupo) | Ninguno |
-| `POST` | `/:chatId/members` | **RF-G.3:** Añade un usuario al grupo. | AuthZ (Admin del Grupo) | `user_id_to_add`, `role` (opcional) |
-| `DELETE` | `/:chatId/members/:userId` | **RF-G.3:** Revoca acceso. **Requiere Rotación de Llave (RF-G.5).** | AuthZ (Admin del Grupo) | Ninguno |
-| `POST` | `/:chatId/rotate-key` | **RF-G.5:** Genera una nueva `enigmaMasterKey` para el grupo. | AuthZ (Admin del Grupo) | Ninguno |
+### `POST /api/groups/:id/members`
+- **Descripción:** Añade un miembro a un grupo
+- **Autenticación:** Requiere JWT (solo administradores)
+- **Request Body:**
+  ```json
+  {
+    "userId": "string",
+    "role": "ADMIN|MEMBER"
+  }
+  ```
+- **Status Codes:** `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`
+
+### `DELETE /api/groups/:id/members/:userId`
+- **Descripción:** Elimina un miembro de un grupo
+- **Autenticación:** Requiere JWT (solo administradores)
+- **Status Codes:** `204 No Content`, `401 Unauthorized`, `403 Forbidden`
+
+---
+
+## 4. WebSocket
+
+### `WEBSOCKET /ws`
+- **Descripción:** Conexión WebSocket para mensajería en tiempo real
+- **Eventos:**
+  - `message`: Envía/recibe mensajes
+  - `typing`: Indica que un usuario está escribiendo
+  - `online`: Estado de conexión de usuarios
+
+---
+
+## 5. Manejo de Errores
+
+La API utiliza los siguientes códigos de estado HTTP:
+
+- `200 OK`: La solicitud se completó exitosamente
+- `201 Created`: Recurso creado exitosamente
+- `204 No Content`: Operación exitosa sin contenido que devolver
+- `400 Bad Request`: La solicitud es inválida o mal formada
+- `401 Unauthorized`: No se proporcionaron credenciales válidas
+- `403 Forbidden`: No tiene permisos para acceder al recurso
+- `404 Not Found`: El recurso solicitado no existe
+- `409 Conflict`: Conflicto con el estado actual del recurso
+- `500 Internal Server Error`: Error interno del servidor
+
+Los errores devuelven un objeto JSON con la siguiente estructura:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Mensaje de error descriptivo",
+  "error": "Bad Request"
+}
+```
+
+### Ejemplos de errores comunes
+
+#### Autenticación fallida
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+
+{
+  "statusCode": 401,
+  "message": "Credenciales inválidas",
+  "error": "Unauthorized"
+}
+```
+
+#### Recurso no encontrado
+```http
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "statusCode": 404,
+  "message": "Usuario no encontrado",
+  "error": "Not Found"
+}
+```
+
+#### Error de validación
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "statusCode": 400,
+  "message": [
+    "email debe ser un correo electrónico válido",
+    "password debe tener al menos 8 caracteres"
+  ],
+  "error": "Bad Request"
+}
+```
 
 ---
 
