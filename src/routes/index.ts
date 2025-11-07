@@ -9,10 +9,10 @@ export const apiRouter = (app: Application) => {
 
   app.use('/api', router);
 
-  router.use('/auth', authRouter);
-  router.use('/chats', chatsRouter);
+  //router.use('/auth', authRouter);
+  //router.use('/chats', chatsRouter);
   router.use('/groups', groupsRouter);
-  router.use('/users', usersRouter);
+  //router.use('/users', usersRouter);
 
   return router;
 };

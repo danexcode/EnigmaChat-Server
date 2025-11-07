@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "passport";
+import passport from "passport";
 
 import { GroupsService } from "@/services/groups.service";
 import { validateMemberRole, authorizeMemberRemoval } from "@/middlewares/auth.handler";
@@ -11,7 +11,7 @@ const groupsService = new GroupsService();
 
 // Get group members
 groupsRouter.get('/:id/members',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN', 'MEMBER'),
   async (req, res, next) => {
     try {
@@ -26,7 +26,7 @@ groupsRouter.get('/:id/members',
 
 // Add member to group
 groupsRouter.post('/:id/members',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN'),
   validateDataHandler(addMemberToGroupSchema, 'body'),
   async (req, res, next) => {
@@ -43,7 +43,7 @@ groupsRouter.post('/:id/members',
 
 // Remove member from group
 groupsRouter.delete('/:id/members/:userId',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(removeMemberFromGroupSchema, 'params'),
   authorizeMemberRemoval('ADMIN'),
   async (req, res, next) => {

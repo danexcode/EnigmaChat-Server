@@ -4,6 +4,7 @@ import express from 'express';
 import { apiRouter } from '@/routes';
 import { setupAuthStrategies } from '@/auth';
 import { boomErrorHandler, errorHandler, ormErrorHandler } from '@/middlewares/errors.handler';
+import passport from 'passport';
 
 export const createApp = () => {
   const app = express();
@@ -11,7 +12,10 @@ export const createApp = () => {
   app.use(express.json());
   app.use(cors());
 
+
   setupAuthStrategies();
+  app.use(passport.initialize());
+
 
   apiRouter(app);
 

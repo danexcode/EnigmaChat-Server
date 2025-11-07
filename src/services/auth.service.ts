@@ -163,6 +163,7 @@ export class AuthService {
         imageUrl: user.imageUrl || undefined,
         is2faEnabled: user.is2faEnabled,
       },
+      message: 'Login successful',
     };
 
     return response;

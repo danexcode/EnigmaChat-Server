@@ -1,5 +1,5 @@
-import { authenticate } from 'passport';
 import { Router } from 'express';
+import passport from 'passport';
 
 import { JwtPayload } from '@/types';
 import { ChatsService } from '@/services/chats.service';
@@ -14,7 +14,7 @@ const chatsService = new ChatsService();
 
 // Get user chats
 chatsRouter.get('/',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
@@ -29,7 +29,7 @@ chatsRouter.get('/',
 
 // Create chat
 chatsRouter.post('/',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(createChatSchema, 'body'),
   async (req, res, next) => {
     try {
@@ -44,7 +44,7 @@ chatsRouter.post('/',
 
 // Get chat by id
 chatsRouter.get('/:id',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   async (req, res, next) => {
     try {
@@ -58,7 +58,7 @@ chatsRouter.get('/:id',
 );
 
 chatsRouter.put('/:id/rotate-key',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   validateDataHandler(rotateChatKeySchema, 'body'),
   async (req, res, next) => {
@@ -75,7 +75,7 @@ chatsRouter.put('/:id/rotate-key',
 
 // Get messages by chat id
 chatsRouter.get('/:id/messages',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   async (req, res, next) => {
     try {
@@ -90,7 +90,7 @@ chatsRouter.get('/:id/messages',
 
 // Send message to chat
 chatsRouter.post('/:id/messages',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(findByIdSchema, 'params'),
   validateDataHandler(createMessageSchema, 'body'),
   async (req, res, next) => {
@@ -107,7 +107,7 @@ chatsRouter.post('/:id/messages',
 
 // Delete message
 chatsRouter.delete('/:id/messages/:messageId',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(findByMessageIdSchema, 'params'),
   authorizeMessageDeletion('ADMIN'),
   async (req, res, next) => {

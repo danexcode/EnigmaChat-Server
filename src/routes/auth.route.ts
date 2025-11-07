@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate } from 'passport';
+import passport from 'passport';
 
 import { JwtPayload, User } from '@/types';
 import { AuthService } from '@/services/auth.service';
@@ -10,9 +10,10 @@ import { LoginResponse } from '@/types/response';
 export const authRouter = Router();
 const authService = new AuthService();
 
+// Login route
 authRouter.post('/login',
   validateDataHandler(loginUserSchema, 'body'),
-  authenticate('local', { session: false }),
+  passport.authenticate('local', { session: false }),
   async (req, res, next) => {
     try {
       const user = req.user as User;
@@ -43,6 +44,7 @@ authRouter.post('/login',
   }
 );
 
+// Register route
 authRouter.post('/register',
   validateDataHandler(registerUserSchema, 'body'),
   async (req, res, next) => {
@@ -60,8 +62,9 @@ authRouter.post('/register',
   }
 );
 
+// Setup 2FA route
 authRouter.post('/setup-2fa',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   async (req, res, next) => {
     try {
       const user2fa = await authService.generate2fa();
@@ -72,38 +75,27 @@ authRouter.post('/setup-2fa',
   }
 );
 
+// Confirm 2FA setup route
 authRouter.post('/confirm-2fa',
-  authenticate('jwt', { session: false }),
+  passport.authenticate('jwt', { session: false }),
   validateDataHandler(confirm2faSchema, 'body'),
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
       const { token, secret } = req.body;
 
-      const message = await authService.confirm2fa(user.sub, token, secret);
-      res.status(200).json(message);
+      const response = await authService.confirm2fa(user.sub, token, secret);
+      res.status(200).json(response);
     } catch (error) {
       next(error);
     }
   }
 );
 
-authRouter.post('/disable-2fa',
-  authenticate('jwt', { session: false }),
-  async (req, res, next) => {
-    try {
-      const user = req.user as JwtPayload;
-      const message = await authService.disable2fa(user.sub);
-      res.status(200).json(message);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
+// Authenticate with 2FA route
 authRouter.post('/verify-2fa',
   validateDataHandler(verify2faSchema, 'body'),
-  authenticate('jwt-2fa', { session: false }),
+  passport.authenticate('jwt-2fa', { session: false }),
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
@@ -116,3 +108,19 @@ authRouter.post('/verify-2fa',
     }
   }
 );
+
+// Disable 2FA route
+authRouter.post('/disable-2fa',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      const user = req.user as JwtPayload;
+      const message = await authService.disable2fa(user.sub);
+      res.status(200).json(message);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
