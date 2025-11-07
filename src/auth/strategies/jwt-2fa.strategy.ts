@@ -3,7 +3,13 @@ import { config } from '@/config';
 import { badImplementation } from '@hapi/boom';
 
 const options: StrategyOptions = {
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Extrae el token del encabezado Authorization
+  jwtFromRequest: (req) => {
+    let token = null;
+    if (req && req.cookies) {
+      token = req.cookies.accessToken; // 'accessToken' es el nombre de la cookie
+    }
+    return token;
+  },
   secretOrKey: config.auth.jwt2faSecret || (() => {
     console.error("JWT secret is not defined")
     throw badImplementation('Internal server error');

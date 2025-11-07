@@ -5,7 +5,13 @@ import { prisma } from '@/server';
 
 const options: StrategyOptions = {
   // Extrae el token del encabezado Authorization
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  jwtFromRequest: (req) => {
+    let token = null;
+    if (req && req.cookies) {
+      token = req.cookies.accessToken; // 'accessToken' es el nombre de la cookie
+    }
+    return token;
+  },
   // Pasa el request al callback
   passReqToCallback: true,
   // Secret para verificar el token
