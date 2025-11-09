@@ -18,6 +18,10 @@ export const createApp = () => {
   setupAuthStrategies();
   app.use(passport.initialize());
 
+  // Health check endpoint
+  app.get('/', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
 
   apiRouter(app);
 
