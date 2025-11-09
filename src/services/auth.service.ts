@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { compare } from "bcryptjs";
 import { toDataURL } from "qrcode";
-import { GeneratedSecret, generateSecret, totp } from "speakeasy";
+import speakeasy from "speakeasy";
 import { badImplementation, notFound, unauthorized } from "@hapi/boom";
 
 import { config } from "@/config";
@@ -26,7 +26,7 @@ export class AuthService {
       where: { email },
     });
     if (!user) {
-      throw notFound('Invalid email or password');
+      throw unauthorized('Invalid email or password');
     }
     const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
@@ -52,13 +52,11 @@ export class AuthService {
       iat: Date.now(),
       exp: Date.now() + 5 * 60 * 1000,
     }
-    return jwt.sign(payload, config.auth.jwt2faSecret, {
-      expiresIn: '5m'
-    });
+    return jwt.sign(payload, config.auth.jwt2faSecret);
   }
 
   async generate2fa() {
-    const secret: GeneratedSecret = generateSecret({
+    const secret: speakeasy.GeneratedSecret = speakeasy.generateSecret({
       name: "EnigmaChat",
     });
 
@@ -84,7 +82,7 @@ export class AuthService {
     }
 
     // Verificamos el token con el secreto proporcionado
-    const isVerified = totp.verify({
+    const isVerified = speakeasy.totp.verify({
       secret: secret,
       encoding: 'base32',
       token,
@@ -140,7 +138,7 @@ export class AuthService {
       throw unauthorized('2FA not enabled');
     }
 
-    const isVerified = totp.verify({
+    const isVerified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: 'base32',
       token,
