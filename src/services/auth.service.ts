@@ -42,9 +42,7 @@ export class AuthService {
       iat: Date.now(),
       exp: Date.now() + 24 * 60 * 60 * 1000,
     }
-    return jwt.sign(payload, config.auth.jwtSecret, {
-      expiresIn: '24h'
-    });
+    return jwt.sign(payload, config.auth.jwtSecret);
   }
 
   async sign2faToken(userId: string) {

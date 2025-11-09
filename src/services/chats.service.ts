@@ -92,9 +92,6 @@ export class ChatsService {
           include: {
             creator: true,
             members: {
-              select: {
-                role: true,
-              },
               include: {
                 user: true,
               },
