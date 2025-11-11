@@ -5,7 +5,7 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 ## 🔑 Convenciones Generales
 
 * **IDs:** Todos los identificadores son cadenas alfanuméricas generadas por `nanoid`
-* **Autenticación:** Requiere JWT en el encabezado `Authorization: Bearer <token>`
+* **Autenticación:** Requiere cookies de servidor
 * **Formato de fechas:** ISO 8601 (ej: `2025-11-06T20:43:00.000Z`)
 * **Cifrado:** Todas las operaciones de cifrado/descifrado se realizan en el backend
 

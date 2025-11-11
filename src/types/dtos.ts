@@ -4,6 +4,14 @@ import type { ChatType, GroupRole } from '@prisma/client';
 //          USER DTOS
 // ===================================
 
+export interface UserResponseDto {
+  id: string;
+  username: string;
+  email: string;
+  imageUrl: string | null;
+  is2faEnabled: boolean;
+}
+
 export interface CreateUserDto {
   username: string;
   email: string;

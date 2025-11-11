@@ -2,7 +2,7 @@ import { conflict, notFound } from '@hapi/boom';
 import { prisma } from '@/server';
 import { hash } from 'bcryptjs';
 
-import type { CreateUserDto, UpdateUserDto } from '@/types/dtos';
+import type { CreateUserDto, UpdateUserDto, UserResponseDto } from '@/types/dtos';
 import { generateShortId } from '@/utils/idGenerator';
 
 export class UsersService {
@@ -20,26 +20,38 @@ export class UsersService {
 
     const hashedPassword = await hash(data.password, 10);
 
-    const newUser = await prisma.user.create({
+    const newUser: UserResponseDto = await prisma.user.create({
       data: {
         id: generateShortId(),
         username: data.username,
         email: data.email,
         passwordHash: hashedPassword,
       },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is2faEnabled: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
-    const { passwordHash, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+
+    return newUser;
   }
 
   async findById(id: string) {
-    const user = prisma.user.findUnique({
+    const user: UserResponseDto | null = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
         username: true,
         email: true,
         is2faEnabled: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
     if (!user) {
@@ -49,13 +61,16 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    const user = prisma.user.findUnique({
+    const user: UserResponseDto | null = await prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
         username: true,
         email: true,
         is2faEnabled: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
     if (!user) {
@@ -65,13 +80,16 @@ export class UsersService {
   }
 
   async findByUsername(username: string) {
-    const user = prisma.user.findUnique({
+    const user: UserResponseDto | null = await prisma.user.findUnique({
       where: { username },
       select: {
         id: true,
         username: true,
         email: true,
         is2faEnabled: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
     if (!user) {
@@ -85,19 +103,33 @@ export class UsersService {
     if (data.passwordHash) {
       data.passwordHash = await hash(data.passwordHash, 10);
     }
-    const user = await prisma.user.update({
+    const user: UserResponseDto = await prisma.user.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        is2faEnabled: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
-    const { passwordHash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return user;
   }
 
   async delete(id: string) {
+    await this.findById(id);
     const userDeleted = await prisma.user.delete({
       where: { id },
+      select: {
+        id: true,
+      }
     });
-    const { passwordHash, ...userWithoutPassword } = userDeleted;
-    return userWithoutPassword;
+    return userDeleted;
   }
 }
