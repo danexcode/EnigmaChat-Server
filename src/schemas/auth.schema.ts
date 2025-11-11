@@ -12,10 +12,10 @@ export const registerUserSchema = Joi.object({
 });
 
 export const confirm2faSchema = Joi.object({
-  token: Joi.string().pattern(/^[0-9]{6}$/).required(),
+  pin: Joi.string().pattern(/^[0-9]{6}$/).required(),
   secret: Joi.string().required(),
 });
 
 export const verify2faSchema = Joi.object({
-  token: Joi.string().pattern(/^[0-9]{6}$/).required(),
+  pin: Joi.string().pattern(/^[0-9]{6}$/).required(),
 });

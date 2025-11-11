@@ -81,7 +81,7 @@ export class AuthService {
     }
   };
 
-  async confirm2fa(userId: string, token: string, secret: string) {
+  async confirm2fa(userId: string, pin: string, secret: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -94,7 +94,7 @@ export class AuthService {
     const isVerified = speakeasy.totp.verify({
       secret: secret,
       encoding: 'base32',
-      token,
+      token: pin,
     });
 
     if (!isVerified) {
@@ -134,7 +134,7 @@ export class AuthService {
     return { message: '2FA disabled successfully' };
   }
 
-  async verify2fa(userId: string, token: string) {
+  async verify2fa(userId: string, token: string): Promise<LoginResponse> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });

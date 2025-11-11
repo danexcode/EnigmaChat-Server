@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import passport from 'passport';
 
-import { JwtPayload, User } from '@/types';
+import { JwtPayload } from '@/types';
+import { UserResponseDto } from '@/types/dtos';
+import { LoginResponse } from '@/types/response';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
-import { LoginResponse } from '@/types/response';
 
 export const authRouter = Router();
 const authService = new AuthService();
@@ -16,25 +17,20 @@ authRouter.post('/login',
   passport.authenticate('local', { session: false }),
   async (req, res, next) => {
     try {
-      const user = req.user as User;
+      const user = req.user as UserResponseDto;
       const response: LoginResponse = {
         token: '',
-        required2fa: false,
       };
+      // If user has 2FA enabled, return 2FA token
       if (user.is2faEnabled) {
         response.token = await authService.sign2faToken(user.id);
-        response.required2fa = true;
         response.message = '2FA verification required';
-      } else {
+      }
+      // If user has 2FA disabled, return auth token (session)
+      else {
         response.token = await authService.signAuthToken(user.id);
-        response.user = {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          imageUrl: user.imageUrl,
-          is2faEnabled: user.is2faEnabled,
-        };
         response.message = 'Login successful';
+        response.user = user;
       }
 
       res
@@ -89,9 +85,9 @@ authRouter.post('/confirm-2fa',
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
-      const { token, secret } = req.body;
+      const { pin, secret } = req.body;
 
-      const response = await authService.confirm2fa(user.sub, token, secret);
+      const response = await authService.confirm2fa(user.sub, pin, secret);
       res.status(200).json(response);
     } catch (error) {
       next(error);
@@ -106,9 +102,8 @@ authRouter.post('/verify-2fa',
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
-      const userId = user.sub;
-      const { token } = req.body;
-      const response = await authService.verify2fa(userId, token);
+      const { accessToken } = req.cookies;
+      const response = await authService.verify2fa(user.sub, accessToken);
       res
         .cookie('accessToken', response.token, {
           httpOnly: true,
@@ -130,8 +125,8 @@ authRouter.post('/disable-2fa',
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
-      const message = await authService.disable2fa(user.sub);
-      res.status(200).json(message);
+      const response = await authService.disable2fa(user.sub);
+      res.status(200).json(response);
     } catch (error) {
       next(error);
     }

@@ -10,6 +10,8 @@ export interface UserResponseDto {
   email: string;
   imageUrl: string | null;
   is2faEnabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreateUserDto {

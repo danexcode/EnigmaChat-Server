@@ -32,14 +32,17 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
     "password": "string"
   }
   ```
-- **Response Body:**
+- **Response Body:** UserResponseDto
   ```json
   {
     "user": {
       "id": "string",
       "username": "string",
       "email": "string",
-      "is2faEnabled": false
+      "imageUrl": "string | null",
+      "is2faEnabled": "boolean",
+      "createdAt": "string (ISO 8601)",
+      "updatedAt": "string (ISO 8601)"
     }
   }
   ```
@@ -59,13 +62,15 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
   ```json
   {
     "token": "string (JWT)",
-    "required2fa": false,
+    "message": "Login successful",
     "user": {
       "id": "string",
       "username": "string",
       "email": "string",
-      "imageUrl": "string (opcional)",
-      "is2faEnabled": false
+      "imageUrl": "string | null",
+      "is2faEnabled": "boolean",
+      "createdAt": "string (ISO 8601)",
+      "updatedAt": "string (ISO 8601)"
     }
   }
   ```
@@ -97,11 +102,11 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Request Body:**
   ```json
   {
-    "token": "string",
+    "pin": "string[6]",
     "secret": "string"
   }
   ```
-- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`
 
 ### `POST /api/auth/verify-2fa`
 - **Descripción:** Verifica un código 2FA
@@ -109,7 +114,7 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Request Body:**
   ```json
   {
-    "token": "string"
+    "pin": "string"
   }
   ```
 - **Response Body:**
@@ -121,11 +126,14 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
       "username": "string",
       "email": "string",
       "imageUrl": "string (opcional)",
-      "is2faEnabled": true
-    }
+      "is2faEnabled": "boolean",
+      "createdAt": "string (ISO 8601)",
+      "updatedAt": "string (ISO 8601)"
+    },
+    "message": "Login successful"
   }
   ```
-- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`, `404 Not Found`
 
 ### `POST /api/auth/disable-2fa`
 - **Descripción:** Desactiva la autenticación de dos factores
