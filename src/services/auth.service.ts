@@ -6,7 +6,7 @@ import { badImplementation, notFound, unauthorized } from "@hapi/boom";
 
 import { config } from "@/config";
 import { prisma } from "@/server";
-import { CreateUserDto } from "@/types/dtos";
+import { CreateUserDto, UserResponseDto } from "@/types/dtos";
 import { UsersService } from '@/services/users.service';
 import { JwtPayload } from "@/types";
 import { LoginResponse } from "@/types/response";
@@ -32,7 +32,16 @@ export class AuthService {
     if (!isPasswordValid) {
       throw unauthorized('Invalid email or password');
     }
-    return user;
+    const userResponse: UserResponseDto = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      imageUrl: user.imageUrl,
+      is2faEnabled: user.is2faEnabled,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }
+    return userResponse;
   }
 
   async signAuthToken(userId: string) {
@@ -156,8 +165,10 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
-        imageUrl: user.imageUrl || undefined,
+        imageUrl: user.imageUrl,
         is2faEnabled: user.is2faEnabled,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
       message: 'Login successful',
     };
