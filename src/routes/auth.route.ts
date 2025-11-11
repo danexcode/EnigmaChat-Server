@@ -34,11 +34,12 @@ authRouter.post('/login',
       }
 
       res
+        .status(200)
         .cookie('accessToken', response.token, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
-          maxAge: 60 * 60 * 24 * 7, // 1 week
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
         .json(response);
     } catch (error) {
@@ -102,16 +103,16 @@ authRouter.post('/verify-2fa',
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
-      const { accessToken } = req.cookies;
-      const response = await authService.verify2fa(user.sub, accessToken);
+      const { pin } = req.body;
+      const response = await authService.verify2fa(user.sub, pin);
       res
+        .status(200)
         .cookie('accessToken', response.token, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
-          maxAge: 60 * 60 * 24 * 7, // 1 week
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
-        .status(200)
         .json(response);
     } catch (error) {
       next(error);

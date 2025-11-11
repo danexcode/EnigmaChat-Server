@@ -59,7 +59,7 @@ export class AuthService {
       sub: userId,
       purpose: '2fa',
       iat: Date.now(),
-      exp: Date.now() + 5 * 60 * 1000,
+      exp: Date.now() + 5 * 60 * 1000, // 5 minutes
     }
     return jwt.sign(payload, config.auth.jwt2faSecret);
   }
@@ -134,7 +134,7 @@ export class AuthService {
     return { message: '2FA disabled successfully' };
   }
 
-  async verify2fa(userId: string, token: string): Promise<LoginResponse> {
+  async verify2fa(userId: string, pin: string): Promise<LoginResponse> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -150,7 +150,7 @@ export class AuthService {
     const isVerified = speakeasy.totp.verify({
       secret: user.twoFactorSecret,
       encoding: 'base32',
-      token,
+      token: pin,
     });
 
     if (!isVerified) {
