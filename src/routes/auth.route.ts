@@ -25,6 +25,7 @@ authRouter.post('/login',
       if (user.is2faEnabled) {
         response.token = await authService.sign2faToken(user.id);
         response.message = '2FA verification required';
+        response.required2fa = true;
       }
       // If user has 2FA disabled, return auth token (session)
       else {
