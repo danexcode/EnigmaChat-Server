@@ -22,12 +22,17 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
+    // Buscamos el usuario por su email
     const user = await prisma.user.findUnique({
       where: { email },
     });
+
+    // Si no se encuentra el usuario, lanzamos un error
     if (!user) {
       throw unauthorized('Invalid email or password');
     }
+
+    // Verificamos la contraseña
     const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw unauthorized('Invalid email or password');

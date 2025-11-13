@@ -11,7 +11,7 @@ import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema 
 export const authRouter = Router();
 const authService = new AuthService();
 
-// Login route
+// Login
 authRouter.post('/login',
   validateDataHandler(loginUserSchema, 'body'),
   passport.authenticate('local', { session: false }),
@@ -21,19 +21,19 @@ authRouter.post('/login',
       const response: LoginResponse = {
         token: '',
       };
-      // If user has 2FA enabled, return 2FA token
+      // Si el usuario tiene 2FA habilitado, retornamos el token de 2FA
       if (user.is2faEnabled) {
         response.token = await authService.sign2faToken(user.id);
         response.message = '2FA verification required';
         response.required2fa = true;
       }
-      // If user has 2FA disabled, return auth token (session)
+      // Si el usuario no tiene 2FA habilitado, retornamos el token de autenticación
       else {
         response.token = await authService.signAuthToken(user.id);
         response.message = 'Login successful';
         response.user = user;
       }
-
+      // Setear el token de autenticación en el cookie
       res
         .status(200)
         .cookie('accessToken', response.token, {
