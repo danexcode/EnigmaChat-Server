@@ -38,7 +38,7 @@ authRouter.post('/login',
         .status(200)
         .cookie('accessToken', response.token, {
           httpOnly: true,
-          secure: true,
+          //secure: true,
           sameSite: 'strict',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
@@ -65,7 +65,7 @@ authRouter.post('/register',
         .status(200)
         .cookie('accessToken', token, {
           httpOnly: true,
-          secure: true,
+          //secure: true,
           sameSite: 'strict',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
@@ -119,7 +119,7 @@ authRouter.post('/verify-2fa',
         .status(200)
         .cookie('accessToken', response.token, {
           httpOnly: true,
-          secure: true,
+          //secure: true,
           sameSite: 'strict',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
         })
