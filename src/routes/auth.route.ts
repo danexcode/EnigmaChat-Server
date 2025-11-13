@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import passport from 'passport';
+import { config } from '@/config';
 
 import { JwtPayload } from '@/types';
 import { UserResponseDto } from '@/types/dtos';
@@ -7,6 +8,15 @@ import { LoginResponse } from '@/types/response';
 import { AuthService } from '@/services/auth.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
+
+// Configuración de cookies seguras
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.isProd, // true en producción, false en desarrollo
+  sameSite: config.isProd ? 'none' as const : 'lax' as const, // 'none' para producción con HTTPS, 'lax' para desarrollo
+  maxAge: 1000 * 60 * 60 * 24 * 7, // 1 semana
+  domain: config.isProd ? config.frontendUrl : undefined // Dominio raíz para producción
+};
 
 export const authRouter = Router();
 const authService = new AuthService();
@@ -36,12 +46,7 @@ authRouter.post('/login',
       // Setear el token de autenticación en el cookie
       res
         .status(200)
-        .cookie('accessToken', response.token, {
-          httpOnly: true,
-          //secure: true,
-          sameSite: 'strict',
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        })
+        .cookie('accessToken', response.token, cookieOptions)
         .json(response);
     } catch (error) {
       next(error);
@@ -61,14 +66,9 @@ authRouter.post('/register',
         password,
       });
       const token = await authService.signAuthToken(user.id);
-      res
+res
         .status(200)
-        .cookie('accessToken', token, {
-          httpOnly: true,
-          //secure: true,
-          sameSite: 'strict',
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        })
+        .cookie('accessToken', token, cookieOptions)
         .json(user);
     } catch (error) {
       next(error);
@@ -117,12 +117,7 @@ authRouter.post('/verify-2fa',
       const response = await authService.verify2fa(user.sub, pin);
       res
         .status(200)
-        .cookie('accessToken', response.token, {
-          httpOnly: true,
-          //secure: true,
-          sameSite: 'strict',
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-        })
+        .cookie('accessToken', response.token, cookieOptions)
         .json(response);
     } catch (error) {
       next(error);
