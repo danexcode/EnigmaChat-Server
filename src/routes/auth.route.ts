@@ -15,7 +15,10 @@ const cookieOptions = {
   secure: config.isProd, // true en producción, false en desarrollo
   sameSite: config.isProd ? 'none' as const : 'lax' as const, // 'none' para producción con HTTPS, 'lax' para desarrollo
   maxAge: 1000 * 60 * 60 * 24 * 7, // 1 semana
-  domain: config.isProd ? '.enigmam3chat.vercel.app' : undefined // Dominio raíz para producción
+  path: '/', // Asegurar que la cookie esté disponible en todas las rutas
+  // No establecer el dominio para que el navegador use el dominio de la solicitud actual
+  // Esto es importante cuando el frontend y el backend están en dominios diferentes
+  // y estás usando CORS
 };
 
 export const authRouter = Router();
@@ -66,7 +69,8 @@ authRouter.post('/register',
         password,
       });
       const token = await authService.signAuthToken(user.id);
-res
+      console.log(token);
+      res
         .status(200)
         .cookie('accessToken', token, cookieOptions)
         .json(user);
