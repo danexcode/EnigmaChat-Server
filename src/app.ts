@@ -10,14 +10,16 @@ import {
   errorHandler,
   ormErrorHandler
 } from '@/middlewares/errors.handler';
-import { corsOptions } from '@/config/cors';
 
 export const createApp = () => {
   const app = express();
 
   // middlewares
   app.use(express.json());
-  app.use(cors(corsOptions));
+  app.use(cors({
+    origin: 'localhost:5173',
+    credentials: true
+  }));
   app.use(cookieParser());
 
   // setear estrategias de autenticación

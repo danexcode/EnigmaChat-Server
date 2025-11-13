@@ -42,7 +42,7 @@ export const config = {
   },
 
   // Configuración de la URL de la aplicación
-  frontendUrl: isProd ? process.env.FRONTEND_URL : 'http://localhost:3000',
+  frontendUrl: isProd ? process.env.FRONTEND_URL : 'http://localhost:5173',
 
   // Logging
   logging: {
