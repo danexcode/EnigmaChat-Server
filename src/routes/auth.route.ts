@@ -15,7 +15,7 @@ const cookieOptions = {
   secure: config.isProd, // true en producción, false en desarrollo
   sameSite: config.isProd ? 'none' as const : 'lax' as const, // 'none' para producción con HTTPS, 'lax' para desarrollo
   maxAge: 1000 * 60 * 60 * 24 * 7, // 1 semana
-  domain: config.isProd ? config.frontendUrl : undefined // Dominio raíz para producción
+  domain: config.isProd ? '.enigmam3chat.vercel.app' : undefined // Dominio raíz para producción
 };
 
 export const authRouter = Router();
