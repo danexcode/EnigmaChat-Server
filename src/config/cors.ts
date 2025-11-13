@@ -1,7 +1,8 @@
 // Lista de orígenes permitidos
 const allowedOrigins = [
   'http://localhost:5173', // Tu entorno de desarrollo
-  'https://enigma-chat.vercel.app' // El dominio de tu app en producción
+  'https://enigma-chat.vercel.app', // El dominio de tu app en producción
+  'https://enigmachat.vercel.app'
 ];
 
 export const corsOptions = {
