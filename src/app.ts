@@ -17,7 +17,7 @@ export const createApp = () => {
   // middlewares
   app.use(express.json());
   app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://enigmam3chat.vercel.app',
     credentials: true
   }));
   app.use(cookieParser());
