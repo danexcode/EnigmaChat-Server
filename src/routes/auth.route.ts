@@ -60,7 +60,16 @@ authRouter.post('/register',
         email,
         password,
       });
-      res.json(user);
+      const token = await authService.signAuthToken(user.id);
+      res
+        .status(200)
+        .cookie('accessToken', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
+        })
+        .json(user);
     } catch (error) {
       next(error);
     }

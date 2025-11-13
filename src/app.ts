@@ -17,7 +17,10 @@ export const createApp = () => {
 
   // middlewares
   app.use(express.json());
-  app.use(cors(corsOptions));
+  app.use(cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+  }));
   app.use(cookieParser());
 
   // setear estrategias de autenticación
@@ -38,11 +41,3 @@ export const createApp = () => {
 
   return app;
 }
-
-const app = createApp();
-const PORT = process.env.PORT || 3000;
-
-// iniciar servidor
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
