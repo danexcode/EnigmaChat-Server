@@ -181,14 +181,32 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
   ```
 - **Status Codes:** `200 OK`, `401 Unauthorized`
 
-### `POST /api/chats`
-- **Descripción:** Crea un nuevo chat
+### `POST /api/chats/individual`
+- **Descripción:** Crea un nuevo chat individual
 - **Autenticación:** Requiere JWT
 - **Request Body:**
   ```json
   {
-    "participantIds": ["string"],
-    "type": "DIRECT|GROUP"
+    "participants": ["string (username)"],
+    "enigmaMasterKey": "string"
+  }
+  ```
+- **Response Body:** Igual que GET /api/chats
+- **Status Codes:** `201 Created`, `400 Bad Request`, `401 Unauthorized`
+
+### `POST /api/chats/group`
+- **Descripción:** Crea un nuevo chat grupal
+- **Autenticación:** Requiere JWT
+- **Request Body:**
+  ```json
+  {
+    "name": "string",
+    "description": "string (opcional)",
+    "participants": ["string (username)"],
+    "isOpenChat": true,
+    "isEditable": false,
+    "canInvite": false,
+    "enigmaMasterKey": "string"
   }
   ```
 - **Response Body:** Igual que GET /api/chats

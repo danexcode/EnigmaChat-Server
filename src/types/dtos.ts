@@ -35,13 +35,19 @@ export interface UpdateUserDto {
 //          CHAT DTOS
 // ===================================
 
-export interface CreateChatDto {
-  type: ChatType;
-  creatorId?: string;
-  name?: string;
+export interface CreateGroupChatDto {
+  name: string;
   description?: string;
-  // When is a individual chat, this array will have two users
   participants: string[];
+  isOpenChat?: boolean;
+  isEditable?: boolean;
+  canInvite?: boolean;
+  enigmaMasterKey: string;
+}
+
+export interface CreateIndividualChatDto {
+  participants: string[];
+  enigmaMasterKey: string;
 }
 
 export interface UpdateChatDto {

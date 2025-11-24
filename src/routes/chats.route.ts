@@ -3,11 +3,11 @@ import passport from 'passport';
 
 import { JwtPayload } from '@/types';
 import { ChatsService } from '@/services/chats.service';
-import { CreateChatDto, CreateMessageDto } from '@/types/dtos';
+import { CreateGroupChatDto, CreateIndividualChatDto, CreateMessageDto } from '@/types/dtos';
 import { createMessageSchema } from '@/schemas/messages.schema';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { authorizeMessageDeletion } from '@/middlewares/auth.handler';
-import { createChatSchema, findByIdSchema, findByMessageIdSchema, rotateChatKeySchema } from '@/schemas/chats.schema';
+import { createGroupChatSchema, createIndividualChatSchema, findByIdSchema, findByMessageIdSchema, rotateChatKeySchema } from '@/schemas/chats.schema';
 
 export const chatsRouter = Router();
 const chatsService = new ChatsService();
@@ -27,15 +27,34 @@ chatsRouter.get('/',
   }
 );
 
-// Create chat
-chatsRouter.post('/',
+// Create group chat
+chatsRouter.post('/group',
   passport.authenticate('jwt', { session: false }),
-  validateDataHandler(createChatSchema, 'body'),
+  validateDataHandler(createGroupChatSchema, 'body'),
   async (req, res, next) => {
     try {
-      const body: CreateChatDto = req.body;
-      const newChat = await chatsService.create(body);
-      res.json(newChat);
+      const body: CreateGroupChatDto = req.body;
+      const user = req.user as JwtPayload;
+      const userId = user.sub;
+      const newChat = await chatsService.createGroupChat(body, userId);
+      res.status(201).json(newChat);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Create individual chat
+chatsRouter.post('/individual',
+  passport.authenticate('jwt', { session: false }),
+  validateDataHandler(createIndividualChatSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const body: CreateIndividualChatDto = req.body;
+      const user = req.user as JwtPayload;
+      const userId = user.sub;
+      const newChat = await chatsService.createIndividualChat(body, userId);
+      res.status(201).json(newChat);
     } catch (error) {
       next(error);
     }

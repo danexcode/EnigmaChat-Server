@@ -2,58 +2,80 @@ import { notFound } from '@hapi/boom';
 
 import { prisma } from '@/server';
 import { generateShortId } from '@/utils/idGenerator';
-import type { CreateChatDto, CreateMessageDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
+import type { CreateGroupChatDto, CreateIndividualChatDto, CreateMessageDto, UpdateChatDto, UpdateGroupChatDto } from '@/types/dtos';
 
 export class ChatsService {
   constructor() {}
 
   // Create chat
-  async create(data: CreateChatDto) {
+  async createGroupChat(data: CreateGroupChatDto, creatorId: string) {
     const chatId = generateShortId();
-    const { type, creatorId, name, description, participants } = data;
 
     return prisma.$transaction(async (tx) => {
       const chat = await tx.chat.create({
         data: {
           id: chatId,
-          chatType: type,
-          enigmaMasterKey: 'some-key', // Placeholder
+          chatType: 'GROUP',
+          enigmaMasterKey: data.enigmaMasterKey,
         },
       });
 
-      if (type === 'GROUP' && creatorId && name && participants) {
-        await tx.groupChat.create({
-          data: {
-            chatId: chatId,
-            creatorId: creatorId,
-            groupName: name,
-            groupDescription: description,
-          },
-        });
+      await tx.groupChat.create({
+        data: {
+          chatId: chatId,
+          creatorId: creatorId,
+          groupName: data.name,
+          groupDescription: data.description,
+          isOpenChat: data.isOpenChat,
+          isEditable: data.isEditable,
+          canInvite: data.canInvite,
+        },
+      });
 
-        // Add members to the group
-        for (const userId of participants) {
-          await tx.groupMember.create({
-            data: {
-              groupId: chatId,
-              userId: userId,
-              role: userId === creatorId ? 'ADMIN' : 'MEMBER',
-            },
-          });
+      // Add members to the group
+      for (const username of data.participants) {
+        const user = await tx.user.findUnique({
+          where: { username },
+        });
+        if (!user) {
+          throw notFound('User not found');
         }
-      } else if (type === 'INDIVIDUAL' && participants && participants.length === 2) {
-        await tx.individualChat.create({
+        await tx.groupMember.create({
           data: {
-            chatId: chatId,
-            userAId: participants[0],
-            userBId: participants[1],
+            groupId: chatId,
+            userId: user.id,
+            role: user.id === creatorId ? 'ADMIN' : 'MEMBER',
           },
         });
       }
 
       return chat;
     });
-  }
+  };
+
+  async createIndividualChat(data: CreateIndividualChatDto, creatorId: string) {
+    const chatId = generateShortId();
+
+    return prisma.$transaction(async (tx) => {
+      const chat = await tx.chat.create({
+        data: {
+          id: chatId,
+          chatType: 'INDIVIDUAL',
+          enigmaMasterKey: data.enigmaMasterKey,
+        },
+      });
+
+      await tx.individualChat.create({
+        data: {
+          chatId: chatId,
+          userAId: creatorId,
+          userBId: data.participants[0],
+        },
+      });
+
+      return chat;
+    });
+  };
 
   // Send message
   async sendMessage(chatId: string, data: CreateMessageDto) {
