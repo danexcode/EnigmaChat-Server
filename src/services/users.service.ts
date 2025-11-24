@@ -98,6 +98,24 @@ export class UsersService {
     return user;
   }
 
+  async findSomeUsersByUsername(username: string) {
+    const users = await prisma.user.findMany({
+      where: {
+        username: {
+          contains: username,
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        imageUrl: true,
+      },
+      take: 5,
+    });
+    return users;
+  }
+
   async update(id: string, data: UpdateUserDto) {
     await this.findById(id);
     if (data.passwordHash) {

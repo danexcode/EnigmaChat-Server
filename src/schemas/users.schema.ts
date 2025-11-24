@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const username = Joi.string().alphanum().min(3).max(30);
+const username = Joi.string().alphanum().min(3).max(50);
 const email = Joi.string().email();
 const password = Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'));
 const imageUrl = Joi.string().uri();
@@ -24,6 +24,11 @@ export const updateUserSchema = Joi.object({
   twoFactorSecret,
   resetPasswordToken,
   resetPasswordExpires,
+});
+
+export const findUserSchema = Joi.object({
+  username,
+  email,
 });
 
 export const findByIdSchema = Joi.object({

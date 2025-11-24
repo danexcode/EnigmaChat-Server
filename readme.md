@@ -11,15 +11,16 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 
 ## 📚 Índice
 
-1. [Autenticación y Usuarios](#1-autenticación-y-usuarios)
-2. [Chats](#2-chats)
-3. [Grupos](#3-grupos)
-4. [WebSocket](#4-websocket)
-5. [Manejo de Errores](#5-manejo-de-errores)
+1. [Autenticación](#1-autenticación)
+2. [Usuarios](#2-usuarios)
+3. [Chats](#3-chats)
+4. [Grupos](#4-grupos)
+5. [WebSocket](#5-websocket)
+6. [Manejo de Errores](#6-manejo-de-errores)
 
 ---
 
-## 1. Autenticación y Usuarios
+## 1. Autenticación
 
 ### `POST /api/auth/register`
 - **Descripción:** Registra un nuevo usuario
@@ -140,6 +141,10 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Autenticación:** Requiere JWT
 - **Status Codes:** `200 OK`, `401 Unauthorized`
 
+---
+
+## 2. Usuarios
+
 ### `GET /api/users`
 - **Descripción:** Busca usuarios por nombre de usuario o email
 - **Autenticación:** Requiere JWT
@@ -157,9 +162,25 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
   ```
 - **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
 
+### `GET /api/users/some`
+- **Descripción:** Busca usuarios que contengan el texto proporcionado en su nombre de usuario (búsqueda parcial, máx 5 resultados)
+- **Autenticación:** Requiere JWT
+- **Query Parameters:**
+  - `username`: string (requerido)
+- **Response Body:**
+  ```json
+  [{
+    "id": "string",
+    "username": "string",
+    "email": "string",
+    "imageUrl": "string (opcional)"
+  }]
+  ```
+- **Status Codes:** `200 OK`, `400 Bad Request`, `401 Unauthorized`
+
 ---
 
-## 2. Chats
+## 3. Chats
 
 ### `GET /api/chats`
 - **Descripción:** Obtiene la lista de chats del usuario autenticado
@@ -247,7 +268,7 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 
 ---
 
-## 3. Grupos
+## 4. Grupos
 
 ### `GET /api/groups/:id/members`
 - **Descripción:** Obtiene los miembros de un grupo
@@ -283,18 +304,18 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 
 ---
 
-## 4. WebSocket
+## 5. WebSocket
 
 ### `WEBSOCKET /ws`
 - **Descripción:** Conexión WebSocket para mensajería en tiempo real
 - **Eventos:**
-  - `message`: Envía/recibe mensajes
-  - `typing`: Indica que un usuario está escribiendo
-  - `online`: Estado de conexión de usuarios
+- `message`: Envía/recibe mensajes
+- `typing`: Indica que un usuario está escribiendo
+- `online`: Estado de conexión de usuarios
 
 ---
 
-## 5. Manejo de Errores
+## 6. Manejo de Errores
 
 La API utiliza los siguientes códigos de estado HTTP:
 
@@ -358,14 +379,6 @@ Content-Type: application/json
   "error": "Bad Request"
 }
 ```
-
----
-
-## 4. Endpoints de Búsqueda y Utilidades (`/api/users`)
-
-| Método | Ruta | Descripción | Seguridad | Parámetros de Consulta (Query) |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/search` | Busca usuarios por `username` o `email`. | AuthN | `query` |
 
 ---
 
