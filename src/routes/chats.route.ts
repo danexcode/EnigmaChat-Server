@@ -115,8 +115,10 @@ chatsRouter.post('/:id/messages',
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const body: CreateMessageDto = req.body;
-      const messages = await chatsService.sendMessage(id, body);
+      const user = req.user as JwtPayload;
+      const userId = user.sub;
+      const { ciphertext } = req.body;
+      const messages = await chatsService.sendMessage(id, ciphertext, userId);
       res.json(messages);
     } catch (error) {
       next(error);

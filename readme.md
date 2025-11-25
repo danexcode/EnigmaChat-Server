@@ -260,7 +260,7 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Request Body:**
   ```json
   {
-    "content": "string"
+    "ciphertext": "string",
   }
   ```
 - **Response Body:** Mensaje creado (mismo formato que GET /api/chats/:id/messages)

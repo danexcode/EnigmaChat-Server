@@ -4,13 +4,12 @@
 datasource db {
   // Usamos PostgreSQL como referencia, pero la mayoría de los tipos se aplican a MySQL.
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // 2. Configuración del Cliente de Prisma
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  output   = "../../node_modules/.prisma/client"
 }
 
 // 3. Tipos de Datos Compartidos (ENUMs)

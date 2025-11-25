@@ -4,7 +4,6 @@ const chatId = Joi.string().length(8);
 const userId = Joi.string().length(8);
 
 export const createMessageSchema = Joi.object({
-  senderId: userId.required(),
   ciphertext: Joi.string().required(),
 });
 

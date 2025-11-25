@@ -78,13 +78,13 @@ export class ChatsService {
   };
 
   // Send message
-  async sendMessage(chatId: string, data: CreateMessageDto) {
+  async sendMessage(chatId: string, ciphertext: string, senderId: string) {
     const message = await prisma.message.create({
       data: {
         id: generateShortId(),
         chatId: chatId,
-        senderId: data.senderId,
-        ciphertext: data.ciphertext,
+        senderId: senderId,
+        ciphertext: ciphertext,
       },
     });
     return message;
@@ -184,8 +184,11 @@ export class ChatsService {
     const messages = await prisma.message.findMany({
       where: { chatId },
       orderBy: {
-        sentAt: 'desc',
+        sentAt: 'asc',
       },
+      include: {
+        sender: true,
+      }
     });
     return messages;
   }
