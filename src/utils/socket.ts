@@ -36,7 +36,8 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
     try {
       const decoded = verify(token, config.auth.jwtSecret) as JwtPayload;
       
-      if (decoded.purpose !== 'auth') {
+      // Aceptar tokens con propósito 'auth' o 'websocket'
+      if (decoded.purpose !== 'auth' && decoded.purpose !== 'websocket') {
         console.warn('❌ WebSocket connection rejected: Invalid token purpose');
         return next(new Error('Authentication error: Invalid token purpose'));
       }

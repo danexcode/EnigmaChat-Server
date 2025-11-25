@@ -112,12 +112,12 @@ export class ChatsService {
         individualChat: true,
         groupChat: {
           include: {
-            creator: true,
-            members: {
+            creator: false,
+            /* members: {
               include: {
                 user: true,
               },
-            },
+            }, */
           },
         },
       },

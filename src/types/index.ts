@@ -60,7 +60,7 @@ export interface Message {
 
 export interface JwtPayload {
   sub: string;
-  purpose: 'auth' | '2fa' | 'reset-password';
+  purpose: 'auth' | '2fa' | 'reset-password' | 'websocket';
   iat: number;
   exp: number;
 };

@@ -306,12 +306,33 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 
 ## 5. WebSocket
 
-### `WEBSOCKET /ws`
+### `GET /api/ws/token`
+- **Descripción:** Genera un token específico para conexión WebSocket
+- **Autenticación:** Requiere JWT
+- **Response Body:**
+  ```json
+  {
+    "token": "string (JWT para WebSocket)",
+    "expiresIn": "1h"
+  }
+  ```
+- **Status Codes:** `200 OK`, `401 Unauthorized`
+
+### `WEBSOCKET /`
 - **Descripción:** Conexión WebSocket para mensajería en tiempo real
+- **Autenticación:** Requiere token de WebSocket (obtenido desde `GET /api/ws/token`)
+- **Conexión:**
+  ```javascript
+  const socket = io('http://localhost:3000', {
+    auth: { token: 'websocket-token' }
+  });
+  ```
 - **Eventos:**
-- `message`: Envía/recibe mensajes
-- `typing`: Indica que un usuario está escribiendo
-- `online`: Estado de conexión de usuarios
+  - `join-chat`: Unirse a una sala de chat
+  - `leave-chat`: Salir de una sala de chat
+  - `message`: Envía/recibe mensajes
+  - `typing`: Indica que un usuario está escribiendo
+  - `stop-typing`: Indica que un usuario dejó de escribir
 
 ---
 
