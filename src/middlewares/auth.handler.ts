@@ -1,7 +1,7 @@
 import { forbidden } from "@hapi/boom";
 import { NextFunction, Request, Response } from "express";
 
-import { User } from "@/types";
+import { JwtPayload } from "@/types";
 import { prisma } from "@/server";
 
 //TODO: Refactor this middleware to extract logic
@@ -9,8 +9,8 @@ import { prisma } from "@/server";
 // Validate member role
 export const validateMemberRole = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as User;
-    const userId = user.id;
+    const user = req.user as JwtPayload;
+    const userId = user.sub;
     const chatId = req.params.id;
 
     const member = await prisma.groupMember.findUnique({
@@ -33,8 +33,8 @@ export const validateMemberRole = (...roles: string[]) => {
 // Validate message owner
 export const validateMessageOwner = () => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as User;
-    const userId = user.id;
+    const user = req.user as JwtPayload;
+    const userId = user.sub;
     const messageId = req.params.messageId;
 
     const message = await prisma.message.findUnique({
@@ -54,8 +54,8 @@ export const validateMessageOwner = () => {
 // Validate user role or message owner
 export const authorizeMessageDeletion = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const user = req.user as User;
-    const userId = user.id;
+    const user = req.user as JwtPayload;
+    const userId = user.sub;
     const chatId = req.params.id;
     const messageId = req.params.messageId;
 
@@ -94,8 +94,8 @@ export const authorizeMessageDeletion = (...roles: string[]) => {
 // Validate member role or group participant
 export const authorizeMemberRemoval = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const userAuthenticated = req.user as User;
-    const userAuthenticatedId = userAuthenticated.id;
+    const userAuthenticated = req.user as JwtPayload;
+    const userAuthenticatedId = userAuthenticated.sub;
     const chatId = req.params.id;
     const userToDeleteId = req.params.userId;
 

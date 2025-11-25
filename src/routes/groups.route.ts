@@ -51,7 +51,7 @@ groupsRouter.delete('/:id/members/:userId',
       const groupId = req.params.id;
       const userId = req.params.userId;
       const member = await groupsService.removeMemberFromGroup(groupId, userId);
-      res.json(member);
+      res.status(204).json(member);
     } catch (error) {
       next(error);
     }

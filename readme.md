@@ -234,7 +234,7 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Status Codes:** `201 Created`, `400 Bad Request`, `401 Unauthorized`
 
 ### `GET /api/chats/:id/messages`
-- **Descripción:** Obtiene los mensajes de un chat
+- **Descripción:** Obtiene los mensajes de un chat (ordenados cronológicamente de forma ascendente)
 - **Autenticación:** Requiere JWT
 - **Response Body:**
   ```json
@@ -255,12 +255,12 @@ Este documento detalla la interfaz de la API REST para el backend de Enigma Chat
 - **Status Codes:** `200 OK`, `401 Unauthorized`, `403 Forbidden`
 
 ### `POST /api/chats/:id/messages`
-- **Descripción:** Envía un mensaje a un chat
+- **Descripción:** Envía un mensaje a un chat (el remitente se infiere del token)
 - **Autenticación:** Requiere JWT
 - **Request Body:**
   ```json
   {
-    "ciphertext": "string",
+    "ciphertext": "string"
   }
   ```
 - **Response Body:** Mensaje creado (mismo formato que GET /api/chats/:id/messages)
