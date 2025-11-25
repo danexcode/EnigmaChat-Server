@@ -11,6 +11,10 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10.0.0"
+  },
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@prisma/adapter-pg": "^7.0.0",
