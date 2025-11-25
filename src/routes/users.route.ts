@@ -10,8 +10,8 @@ const userService = new UsersService();
 
 // Get user by username or email
 usersRouter.get('/',
-  validateDataHandler(findUserSchema, 'query'),
   passport.authenticate('jwt', { session: false }),
+  validateDataHandler(findUserSchema, 'query'),
   async (req, res, next) => {
     try {
       const { username, email } = req.query;
@@ -33,8 +33,8 @@ usersRouter.get('/',
 
 // Get some users by username
 usersRouter.get('/some',
-  validateDataHandler(findByUsernameSchema, 'query'),
   passport.authenticate('jwt', { session: false }),
+  validateDataHandler(findByUsernameSchema, 'query'),
   async (req, res, next) => {
     try {
       const { username } = req.query;

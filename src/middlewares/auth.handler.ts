@@ -10,8 +10,12 @@ import { prisma } from "@/server";
 export const validateMemberRole = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as JwtPayload;
-    const userId = user.sub;
+    const userId = user?.sub;
     const chatId = req.params.id;
+
+    if (!userId) {
+      return next(forbidden('User not authenticated'));
+    }
 
     const member = await prisma.groupMember.findUnique({
       where: {
@@ -23,7 +27,7 @@ export const validateMemberRole = (...roles: string[]) => {
     });
 
     if (!member || !roles.includes(member.role)) {
-      next(forbidden('You are not authorized to perform this action'))
+      return next(forbidden('You are not authorized to perform this action'));
     }
 
     next();
@@ -34,8 +38,12 @@ export const validateMemberRole = (...roles: string[]) => {
 export const validateMessageOwner = () => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as JwtPayload;
-    const userId = user.sub;
+    const userId = user?.sub;
     const messageId = req.params.messageId;
+
+    if (!userId) {
+      return next(forbidden('User not authenticated'));
+    }
 
     const message = await prisma.message.findUnique({
       where: {
@@ -44,7 +52,7 @@ export const validateMessageOwner = () => {
     });
 
     if (!message || message.senderId !== userId) {
-      next(forbidden('You are not authorized to perform this action'))
+      return next(forbidden('You are not authorized to perform this action'));
     }
 
     next();
@@ -55,9 +63,13 @@ export const validateMessageOwner = () => {
 export const authorizeMessageDeletion = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as JwtPayload;
-    const userId = user.sub;
+    const userId = user?.sub;
     const chatId = req.params.id;
     const messageId = req.params.messageId;
+
+    if (!userId) {
+      return next(forbidden('User not authenticated'));
+    }
 
     const member = await prisma.groupMember.findUnique({
       where: {
@@ -76,7 +88,7 @@ export const authorizeMessageDeletion = (...roles: string[]) => {
 
     // If the user is not a member or the message does not exist
     if (!member || !message) {
-      next(forbidden('You are not authorized to perform this action'))
+      return next(forbidden('You are not authorized to perform this action'));
     }
 
     const isAdmin = member && roles.includes(member.role);
@@ -84,7 +96,7 @@ export const authorizeMessageDeletion = (...roles: string[]) => {
 
     // If the user is not an admin member and the message does not belong to the user
     if (!isAdmin && !isSelf) {
-      next(forbidden('You are not authorized to perform this action'))
+      return next(forbidden('You are not authorized to perform this action'));
     }
 
     next();
@@ -95,9 +107,13 @@ export const authorizeMessageDeletion = (...roles: string[]) => {
 export const authorizeMemberRemoval = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const userAuthenticated = req.user as JwtPayload;
-    const userAuthenticatedId = userAuthenticated.sub;
+    const userAuthenticatedId = userAuthenticated?.sub;
     const chatId = req.params.id;
     const userToDeleteId = req.params.userId;
+
+    if (!userAuthenticatedId) {
+      return next(forbidden('User not authenticated'));
+    }
 
     const member = await prisma.groupMember.findUnique({
       where: {
@@ -113,7 +129,7 @@ export const authorizeMemberRemoval = (...roles: string[]) => {
 
     // If the user is not an admin member and the user is not the user to delete
     if (!isAdmin && !isSelf) {
-      next(forbidden('You are not authorized to perform this action'))
+      return next(forbidden('You are not authorized to perform this action'));
     }
 
     next();

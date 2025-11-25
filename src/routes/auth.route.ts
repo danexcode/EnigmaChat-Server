@@ -23,8 +23,8 @@ const authService = new AuthService();
 
 // Login
 authRouter.post('/login',
-  validateDataHandler(loginUserSchema, 'body'),
   passport.authenticate('local', { session: false }),
+  validateDataHandler(loginUserSchema, 'body'),
   async (req, res, next) => {
     try {
       const user = req.user as UserResponseDto;
@@ -109,8 +109,8 @@ authRouter.post('/confirm-2fa',
 
 // Authenticate with 2FA route
 authRouter.post('/verify-2fa',
-  validateDataHandler(verify2faSchema, 'body'),
   passport.authenticate('jwt-2fa', { session: false }),
+  validateDataHandler(verify2faSchema, 'body'),
   async (req, res, next) => {
     try {
       const user = req.user as JwtPayload;
