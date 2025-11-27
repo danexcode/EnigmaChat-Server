@@ -6,8 +6,10 @@ import { JwtPayload } from '@/types';
 import { UserResponseDto } from '@/types/dtos';
 import { LoginResponse } from '@/types/response';
 import { AuthService } from '@/services/auth.service';
+import { AuditService } from '@/services/audit.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
+import { getIp } from '@/utils/audit';
 
 // Configuración de cookies seguras
 const cookieOptions = {
@@ -42,12 +44,45 @@ authRouter.post('/login',
         response.token = await authService.signAuthToken(user.id);
         response.message = 'Login successful';
         response.user = user;
+        
+        // Auditoría
+        const ip = getIp(req);
+        await AuditService.log({
+          userId: user.id,
+          action: 'LOGIN',
+          entity: 'User',
+          entityId: user.id,
+          ipAddress: ip
+        });
       }
-      // Setear el token de autenticación en el cookie
+
       res
         .status(200)
         .cookie('accessToken', response.token, cookieOptions)
         .json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Logout route
+authRouter.post('/logout',
+  passport.authenticate('jwt', { session: false }),
+  async (req, res, next) => {
+    try {
+      res.clearCookie('accessToken');
+      const user = req.user as JwtPayload;
+      const ip = getIp(req);
+      await AuditService.log({
+        userId: user.sub,
+        action: 'LOGOUT',
+        entity: 'User',
+        entityId: user.sub,
+        ipAddress: ip
+      });
+      
+      res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
       next(error);
     }
@@ -67,6 +102,17 @@ authRouter.post('/register',
       });
       const token = await authService.signAuthToken(user.id);
       console.log(token);
+      
+      // Auditoría
+      const ip = getIp(req);
+      await AuditService.log({
+        userId: user.id,
+        action: 'REGISTER',
+        entity: 'User',
+        entityId: user.id,
+        ipAddress: ip
+      });
+
       res
         .status(200)
         .cookie('accessToken', token, cookieOptions)
@@ -100,6 +146,17 @@ authRouter.post('/confirm-2fa',
       const { pin, secret } = req.body;
 
       const response = await authService.confirm2fa(user.sub, pin, secret);
+
+      // Auditoría
+      const ip = getIp(req);
+      await AuditService.log({
+        userId: user.sub,
+        action: 'CONFIRM_2FA',
+        entity: 'User',
+        entityId: user.sub,
+        ipAddress: ip
+      });
+
       res.status(200).json(response);
     } catch (error) {
       next(error);
@@ -116,6 +173,17 @@ authRouter.post('/verify-2fa',
       const user = req.user as JwtPayload;
       const { pin } = req.body;
       const response = await authService.verify2fa(user.sub, pin);
+
+      // Auditoría
+      const ip = getIp(req);
+      await AuditService.log({
+        userId: user.sub,
+        action: 'LOGIN_2FA',
+        entity: 'User',
+        entityId: user.sub,
+        ipAddress: ip
+      });
+
       res
         .status(200)
         .cookie('accessToken', response.token, cookieOptions)
@@ -133,6 +201,17 @@ authRouter.post('/disable-2fa',
     try {
       const user = req.user as JwtPayload;
       const response = await authService.disable2fa(user.sub);
+
+      // Auditoría
+      const ip = getIp(req);
+      await AuditService.log({
+        userId: user.sub,
+        action: 'DISABLE_2FA',
+        entity: 'User',
+        entityId: user.sub,
+        ipAddress: ip
+      });
+
       res.status(200).json(response);
     } catch (error) {
       next(error);

@@ -74,3 +74,16 @@ export interface CreateMessageDto {
   senderId: string;
   ciphertext: string;
 }
+
+// ===================================
+//          AUDIT DTOS
+// ===================================
+
+export interface CreateAuditLogDto {
+  userId: string | null;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  details?: any;
+  ipAddress?: string;
+}

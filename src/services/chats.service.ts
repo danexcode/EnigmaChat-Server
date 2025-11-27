@@ -20,7 +20,7 @@ export class ChatsService {
         },
       });
 
-      await tx.groupChat.create({
+      const group = await tx.groupChat.create({
         data: {
           chatId: chatId,
           creatorId: creatorId,
@@ -49,7 +49,18 @@ export class ChatsService {
         });
       }
 
-      return chat;
+      return { 
+        id: chat.id,
+        chatType: 'GROUP',
+        groupChat: {
+          groupName: group.groupName,
+          groupDescription: group.groupDescription,
+          isOpenChat: group.isOpenChat,
+          isEditable: group.isEditable,
+          canInvite: group.canInvite,
+          creatorId: group.creatorId,
+        }
+      };
     });
   };
 
@@ -183,11 +194,22 @@ export class ChatsService {
   async findMessagesByChatId(chatId: string) {
     const messages = await prisma.message.findMany({
       where: { chatId },
+
       orderBy: {
         sentAt: 'asc',
       },
-      include: {
-        sender: true,
+      select: {
+        id: true,
+        chatId: true,
+        senderId: true,
+        ciphertext: true,
+        sentAt: true,
+        sender: {
+          select: {
+            username: true,
+            imageUrl: true,
+          },
+        },
       }
     });
     return messages;
