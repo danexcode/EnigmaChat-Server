@@ -13,10 +13,12 @@ export const validateMemberRole = (...roles: string[]) => {
     const userId = user?.sub;
     const chatId = req.params.id;
 
+    // Si usuario no autenticado
     if (!userId) {
       return next(forbidden('User not authenticated'));
     }
 
+    // Buscar miembro
     const member = await prisma.groupMember.findUnique({
       where: {
         groupId_userId: {
@@ -26,6 +28,7 @@ export const validateMemberRole = (...roles: string[]) => {
       },
     });
 
+    // Si miembro no encontrado o rol no permitido
     if (!member || !roles.includes(member.role)) {
       return next(forbidden('You are not authorized to perform this action'));
     }
@@ -41,6 +44,7 @@ export const validateMessageOwner = () => {
     const userId = user?.sub;
     const messageId = req.params.messageId;
 
+    // Si usuario no autenticado
     if (!userId) {
       return next(forbidden('User not authenticated'));
     }

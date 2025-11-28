@@ -28,6 +28,7 @@ groupsRouter.get('/:id/members',
 );
 
 // Add member to group
+// Solo los administradores pueden agregar miembros
 groupsRouter.post('/:id/members',
   passport.authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN'),
@@ -44,7 +45,8 @@ groupsRouter.post('/:id/members',
   }
 );
 
-// Remove member from group
+// Quitar miembro del grupo
+// Solo los administradores pueden remover miembros
 groupsRouter.delete('/:id/members/:userId',
   passport.authenticate('jwt', { session: false }),
   validateDataHandler(removeMemberFromGroupSchema, 'params'),
@@ -61,7 +63,8 @@ groupsRouter.delete('/:id/members/:userId',
   }
 );
 
-// Open Chat
+// Cambiar estado del chat
+// Solo los administradores pueden abrir o cerrar el chat
 groupsRouter.put('/:id',
   passport.authenticate('jwt', { session: false }),
   validateMemberRole('ADMIN'),
@@ -72,6 +75,7 @@ groupsRouter.put('/:id',
       const groupId = req.params.id;
       const { isOpenChat } = req.body;
       const group = await groupsService.updateGroup(groupId, { isOpenChat });
+      // Registra el log de auditoría
       AuditService.log({
         userId: user.sub,
         action: 'CHANGE_OPEN_CHAT',

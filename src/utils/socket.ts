@@ -7,7 +7,7 @@ import { JwtPayload } from '@/types';
 export interface MessagePayload {
   chatId: string;
   ciphertext: string;
-  senderId: string;
+  sender: string;
 }
 
 export interface SocketData {
@@ -70,13 +70,13 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
 
     // Evento de mensaje
     socket.on('message', (payload: MessagePayload) => {
-      const { chatId, ciphertext } = payload;
+      const { chatId, ciphertext, sender } = payload;
       
       // Emitir el mensaje a todos los usuarios en la sala del chat (excepto el remitente)
       socket.to(chatId).emit('message', {
         chatId,
         ciphertext,
-        senderId: userId,
+        sender,
         timestamp: new Date().toISOString(),
       });
 

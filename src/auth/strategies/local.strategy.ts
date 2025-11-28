@@ -6,6 +6,7 @@ import { Request } from 'express';
 
 const authService = new AuthService();
 
+// Estrategia de autenticación local
 export const localStrategy = new LocalStrategy(
   {
     usernameField: 'email', // Campo que se usará como "username"
@@ -21,6 +22,7 @@ export const localStrategy = new LocalStrategy(
       }
       return done(null, user); // Usuario autenticado correctamente
     } catch (error) {
+      // En caso de error, registra el log de auditoría
       AuditService.log({
         userId: null,
         action: 'FAILED_LOGIN',
