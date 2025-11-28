@@ -5,6 +5,9 @@ import { GroupsService } from "@/services/groups.service";
 import { validateMemberRole, authorizeMemberRemoval } from "@/middlewares/auth.handler";
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { addMemberToGroupSchema, openChatSchema, removeMemberFromGroupSchema } from '@/schemas/groups.schema';
+import { AuditService } from "@/services/audit.service";
+import { JwtPayload } from "@/types";
+import { getIp } from "@/utils/audit";
 
 export const groupsRouter = Router();
 const groupsService = new GroupsService();
@@ -65,9 +68,18 @@ groupsRouter.put('/:id',
   validateDataHandler(openChatSchema, 'body'),
   async (req, res, next) => {
     try {
+      const user = req.user as JwtPayload
       const groupId = req.params.id;
       const { isOpenChat } = req.body;
       const group = await groupsService.updateGroup(groupId, { isOpenChat });
+      AuditService.log({
+        userId: user.sub,
+        action: 'CHANGE_OPEN_CHAT',
+        entity: 'group',
+        entityId: groupId,
+        details: { isOpenChat },
+        ipAddress: getIp(req),
+      });
       res.json(group);
     } catch (error) {
       next(error);

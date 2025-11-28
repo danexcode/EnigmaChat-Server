@@ -99,6 +99,21 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
       });
     });
 
+    // Evento de cambio de estado del chat (abierto/cerrado)
+    socket.on('chat-state-change', (payload: { chatId: string; isOpenChat: boolean }) => {
+      const { chatId, isOpenChat } = payload;
+      
+      // Emitir a todos los usuarios en la sala del chat (incluyendo el remitente)
+      io!.to(chatId).emit('chat-state-change', {
+        chatId,
+        isOpenChat,
+        userId,
+        timestamp: new Date().toISOString(),
+      });
+
+      console.log(`Chat ${chatId} state changed to ${isOpenChat ? 'open' : 'closed'} by user ${userId}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${userId} (Socket ID: ${socket.id})`);
     });
