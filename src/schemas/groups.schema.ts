@@ -9,3 +9,8 @@ export const removeMemberFromGroupSchema = Joi.object({
   id: Joi.string().length(8).required(),
   userId: Joi.string().length(8).required(),
 });
+
+export const openChatSchema = Joi.object({
+  isOpenChat: Joi.boolean().required(),
+});
+

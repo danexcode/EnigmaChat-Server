@@ -2,9 +2,19 @@ import { Router, Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 import { WebSocketService } from '@/services/websocket.service';
 import { JwtPayload } from '@/types';
+import { config } from '@/config';
 
 const router = Router();
 const webSocketService = new WebSocketService();
+
+// Configuración de cookies seguras
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.isProd, // true en producción, false en desarrollo
+  sameSite: config.isProd ? 'none' as const : 'lax' as const, // 'none' para producción con HTTPS, 'lax' para desarrollo
+  maxAge: 1000 * 60 * 60 * 24 * 7, // 1 semana
+  path: '/', // Asegurar que la cookie esté disponible en todas las rutas
+};
 
 /**
  * @route   GET /api/ws/token
@@ -21,10 +31,13 @@ router.get(
 
       const wsToken = await webSocketService.generateWebSocketToken(userId);
 
-      res.json({
-        token: wsToken,
-        expiresIn: '1h',
-      });
+      res
+        .status(200)
+        .cookie('wsToken', wsToken, cookieOptions)
+        .json({
+          token: wsToken,
+          expiresIn: '1h',
+        });
     } catch (error) {
       next(error);
     }

@@ -4,7 +4,7 @@ import passport from "passport";
 import { GroupsService } from "@/services/groups.service";
 import { validateMemberRole, authorizeMemberRemoval } from "@/middlewares/auth.handler";
 import { validateDataHandler } from '@/middlewares/validateData.handler';
-import { addMemberToGroupSchema, removeMemberFromGroupSchema } from '@/schemas/groups.schema';
+import { addMemberToGroupSchema, openChatSchema, removeMemberFromGroupSchema } from '@/schemas/groups.schema';
 
 export const groupsRouter = Router();
 const groupsService = new GroupsService();
@@ -52,6 +52,23 @@ groupsRouter.delete('/:id/members/:userId',
       const userId = req.params.userId;
       const member = await groupsService.removeMemberFromGroup(groupId, userId);
       res.status(204).json(member);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Open Chat
+groupsRouter.put('/:id',
+  passport.authenticate('jwt', { session: false }),
+  validateMemberRole('ADMIN'),
+  validateDataHandler(openChatSchema, 'body'),
+  async (req, res, next) => {
+    try {
+      const groupId = req.params.id;
+      const { isOpenChat } = req.body;
+      const group = await groupsService.updateGroup(groupId, { isOpenChat });
+      res.json(group);
     } catch (error) {
       next(error);
     }

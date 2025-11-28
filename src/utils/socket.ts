@@ -26,7 +26,7 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
 
   // Middleware de autenticación
   io.use((socket, next) => {
-    const token = socket.handshake.auth.token || socket.handshake.headers.cookie?.split('accessToken=')[1]?.split(';')[0];
+    const token = socket.handshake.auth.token || socket.handshake.headers.cookie?.split('wsToken=')[1]?.split(';')[0];
 
     if (!token) {
       console.warn('❌ WebSocket connection rejected: No token provided');

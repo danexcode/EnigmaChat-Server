@@ -1,5 +1,5 @@
 import { prisma } from "@/server";
-import { AddGroupMemberDto } from "@/types/dtos";
+import { AddGroupMemberDto, UpdateGroupChatDto } from "@/types/dtos";
 import { ChatsService } from "@/services/chats.service";
 
 export class GroupsService {
@@ -37,5 +37,21 @@ export class GroupsService {
     //await ChatsService.rotateEnigmaMasterKey(groupId);
 
     return member;
+  };
+
+  async updateGroup(groupId: string, data: UpdateGroupChatDto) {
+    const group = await prisma.groupChat.update({
+      where: {
+        chatId: groupId,
+      },
+      data: {
+        groupName: data.name,
+        groupDescription: data.description,
+        isOpenChat: data.isOpenChat,
+        isEditable: data.isEditable,
+        canInvite: data.canInvite,
+      },
+    });
+    return group;
   };
 }

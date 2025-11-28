@@ -57,6 +57,9 @@ export interface UpdateChatDto {
 export interface UpdateGroupChatDto {
   name?: string;
   description?: string;
+  isOpenChat?: boolean;
+  isEditable?: boolean;
+  canInvite?: boolean;
 }
 
 export interface AddGroupMemberDto {
