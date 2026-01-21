@@ -11,6 +11,7 @@ import {
   ormErrorHandler
 } from '@/middlewares/errors.handler';
 import { corsOptions } from '@/config/cors';
+import helmet from 'helmet';
 
 export const createApp = () => {
   const app = express();
@@ -20,6 +21,8 @@ export const createApp = () => {
 
   app.use(cors(corsOptions));
   app.use(cookieParser());
+  // Activa 11 capas de seguridad pequeñas (X-XSS-Protection, Hide Powered-By, etc.)
+  app.use(helmet());
 
   // setear estrategias de autenticación
   setupAuthStrategies();
