@@ -1,4 +1,5 @@
 import { notFound } from '@hapi/boom';
+import sanitizeHtml from 'sanitize-html';
 
 import { prisma } from '@/server';
 import { generateShortId } from '@/utils/idGenerator';
@@ -90,12 +91,17 @@ export class ChatsService {
 
   // Send message
   async sendMessage(chatId: string, ciphertext: string, senderId: string) {
+    const cleanCiphertext = sanitizeHtml(ciphertext, {
+      allowedTags: [],
+      allowedAttributes: {}
+    });
+
     const message = await prisma.message.create({
       data: {
         id: generateShortId(),
         chatId: chatId,
         senderId: senderId,
-        ciphertext: ciphertext,
+        ciphertext: cleanCiphertext,
       },
     });
     return message;
