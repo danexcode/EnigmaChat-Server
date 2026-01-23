@@ -10,6 +10,7 @@ import { AuditService } from '@/services/audit.service';
 import { validateDataHandler } from '@/middlewares/validateData.handler';
 import { confirm2faSchema, loginUserSchema, registerUserSchema, verify2faSchema } from '@/schemas/auth.schema';
 import { getIp } from '@/utils/audit';
+import { loginRateLimiter } from '@/middlewares/rateLimit.handler';
 
 // Configuración de cookies seguras
 const cookieOptions = {
@@ -25,6 +26,7 @@ const authService = new AuthService();
 
 // Login
 authRouter.post('/login',
+  loginRateLimiter,
   passport.authenticate('local', { session: false }),
   validateDataHandler(loginUserSchema, 'body'),
   async (req, res, next) => {

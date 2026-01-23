@@ -15,6 +15,14 @@ export const config = {
     corsOrigin: process.env.CORS_ORIGIN || '*',
   },
 
+  // Configuración de Socket.io
+  socket: {
+    rateLimit: {
+      maxMessages: parseInt(process.env.RATE_LIMIT_MAX_MESSAGES || '5', 10),
+      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '1000', 10),
+    },
+  },
+
   // Configuración de la base de datos
   db: {
     url: isProd ? process.env.DATABASE_URL : process.env.DEV_DATABASE_URL,
@@ -30,6 +38,10 @@ export const config = {
     jwt2faExpiresIn: process.env.JWT_2FA_EXPIRES_IN || '5m',
     jwtSecret: process.env.JWT_SECRET || 'your-default-secret-for-dev',
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    rateLimit: {
+      max: parseInt(process.env.AUTH_RATE_LIMIT_MAX || '5', 10),
+      windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes default
+    },
   },
 
   // Configuración de correo

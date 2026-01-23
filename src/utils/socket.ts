@@ -14,6 +14,61 @@ export interface SocketData {
   userId: string;
 }
 
+export class RateLimiter {
+  private userTimestamps: Map<string, number[]> = new Map();
+  private readonly limit: number;
+  private readonly windowMs: number;
+  private cleanupInterval: NodeJS.Timeout;
+
+  constructor(limit: number, windowMs: number) {
+    this.limit = limit;
+    this.windowMs = windowMs;
+    
+    // Run cleanup every minute
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupStaleUsers();
+    }, 60000);
+  }
+
+  checkLimit(userId: string): boolean {
+    const now = Date.now();
+    const timestamps = this.userTimestamps.get(userId) || [];
+    
+    // Filter out timestamps older than the window
+    const validTimestamps = timestamps.filter(t => now - t < this.windowMs);
+    
+    if (validTimestamps.length >= this.limit) {
+      return false;
+    }
+
+    validTimestamps.push(now);
+    this.userTimestamps.set(userId, validTimestamps);
+    return true;
+  }
+
+  // Remove users who haven't sent messages in a while to prevent memory leaks
+  private cleanupStaleUsers() {
+    const now = Date.now();
+    for (const [userId, timestamps] of this.userTimestamps.entries()) {
+      const validTimestamps = timestamps.filter(t => now - t < this.windowMs);
+      if (validTimestamps.length === 0) {
+        this.userTimestamps.delete(userId);
+      } else {
+        this.userTimestamps.set(userId, validTimestamps);
+      }
+    }
+  }
+  
+  stop() {
+    clearInterval(this.cleanupInterval);
+  }
+}
+
+const rateLimiter = new RateLimiter(
+  config.socket.rateLimit.maxMessages, 
+  config.socket.rateLimit.windowMs
+);
+
 let io: Server | null = null;
 
 export const initializeSocket = (httpServer: HttpServer): Server => {
@@ -70,6 +125,12 @@ export const initializeSocket = (httpServer: HttpServer): Server => {
 
     // Evento de mensaje
     socket.on('message', (payload: MessagePayload) => {
+      if (!rateLimiter.checkLimit(userId)) {
+        console.warn(`User ${userId} exceeded rate limit. Disconnecting...`);
+        socket.disconnect(true);
+        return;
+      }
+
       const { chatId, ciphertext, sender } = payload;
       
       // Emitir el mensaje a todos los usuarios en la sala del chat (excepto el remitente)
